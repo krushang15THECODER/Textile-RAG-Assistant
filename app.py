@@ -51,6 +51,13 @@ st.markdown("""
     --accent: #d4e2d2;
 }
 
+header[data-testid="stHeader"] {
+    display: none !important;
+}
+[data-testid="stDecoration"] {
+    display: none !important;
+}
+
 .stApp {
     background: var(--paper);
     color: var(--ink);
@@ -59,8 +66,16 @@ st.markdown("""
 
 .block-container {
     max-width: 1440px;
-    padding-top: 1.8rem;
-    padding-bottom: 3rem;
+    padding-top: 2.2rem !important;
+    padding-bottom: 3.5rem !important;
+}
+
+@media (max-width: 768px) {
+    .block-container {
+        padding-top: 1.5rem !important;
+        padding-left: 1rem !important;
+        padding-right: 1rem !important;
+    }
 }
 
 .stApp h1, .stApp h2, .stApp h3 {
