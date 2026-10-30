@@ -113,17 +113,16 @@ Open your browser at **`http://localhost:8501`**.
 ## How to Use
 
 ### Customer Mode (Default)
-1. Open the app — you start in Customer Mode with read-only access to the indexed knowledge base.
-2. Click any of the quick prompt buttons or enter a question like:
-   - *"What is the standard pneumatic burst strength test parameter under ISO 13938-2?"*
-   - *"What are the critical temperature limits and degradation risks for elastane during heat-setting?"*
-3. Read the synthesized response and inspect the citation badges.
-4. Click **View Retrieved Evidence Chunks** to inspect the exact passage text, page numbers, and similarity percentages.
+1. Open the app — you start in Customer Mode with access to the **AI Assistant** and the **Overview** telemetry dashboard. Knowledge base document uploads and deletions remain restricted to authenticated administrators.
+2. Navigate between `01 / AI ASSISTANT` and `02 / OVERVIEW`.
+3. In AI Assistant, click any of the quick prompt buttons or enter a technical question.
+4. Read the synthesized response and inspect the citation badges.
+5. Click **View Retrieved Evidence Chunks** to inspect the exact passage text, page numbers, and similarity percentages.
 
 ### Admin Mode
 1. In the sidebar, expand **Admin Login**.
 2. Enter the password (`admin123` or your value in `.env`).
-3. Two new tabs appear in navigation:
+3. The privileged **Knowledge Base** tab unlocks in navigation:
    - **Knowledge Base**: Upload any technical PDF. The system extracts the text, chunks it, embeds it, and updates the index. You can also view indexed documents and delete them with a confirmation dialog.
    - **Overview**: View live database statistics (total indexed PDFs, active vector count, collection name, and connection status).
 4. Click **Log Out of Admin** to return to Customer Mode.

@@ -52,10 +52,47 @@ st.markdown("""
 }
 
 header[data-testid="stHeader"] {
-    display: none !important;
+    background: transparent !important;
+    color: transparent !important;
+    height: auto !important;
+    min-height: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+    pointer-events: none !important;
 }
+
+header[data-testid="stHeader"] [data-testid="stToolbar"],
+header[data-testid="stHeader"] .stAppToolbar,
+header[data-testid="stHeader"] #MainMenu,
 [data-testid="stDecoration"] {
     display: none !important;
+    visibility: hidden !important;
+}
+
+header[data-testid="stHeader"] [data-testid="stSidebarCollapsedControl"],
+[data-testid="stSidebarCollapsedControl"] {
+    display: flex !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+    background: #ffffff !important;
+    border: 1px solid var(--line) !important;
+    border-radius: 8px !important;
+    padding: 2px !important;
+    margin-top: 10px !important;
+    margin-left: 10px !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
+    cursor: pointer !important;
+    z-index: 999992 !important;
+}
+
+header[data-testid="stHeader"] [data-testid="stSidebarCollapsedControl"] button,
+header[data-testid="stHeader"] [data-testid="stSidebarCollapsedControl"] svg,
+[data-testid="stSidebarCollapsedControl"] button,
+[data-testid="stSidebarCollapsedControl"] svg {
+    color: #1b3527 !important;
+    fill: #1b3527 !important;
 }
 
 .stApp {
@@ -653,9 +690,10 @@ with st.sidebar:
             "Overview": "03 / OVERVIEW",
         }
     else:
-        available_pages = ["AI Assistant"]
+        available_pages = ["AI Assistant", "Overview"]
         nav_labels = {
             "AI Assistant": "01 / AI ASSISTANT",
+            "Overview": "02 / OVERVIEW",
         }
 
     page = st.radio(
@@ -694,7 +732,7 @@ with st.sidebar:
         """, unsafe_allow_html=True)
 
 # Backend Security Enforcement
-if page in ["Knowledge Base", "Overview"]:
+if page in ["Knowledge Base"]:
     if not st.session_state.get("is_admin", False):
         st.error("⛔ Unauthorized Access: Administrative authentication required.")
         st.stop()
@@ -703,7 +741,7 @@ if page == "Overview":
     st.markdown("""
     <div class="hero-box">
         <div class="hero-content">
-            <span class="hero-eyebrow">ADMINISTRATIVE DASHBOARD & TELEMETRY</span>
+            <span class="hero-eyebrow">OVERVIEW & ARCHITECTURAL TELEMETRY</span>
             <h1>Real Database Statistics</h1>
             <p class="hero-p">
                 Real-time operational metrics across persistent ChromaDB collections, vector embeddings,
