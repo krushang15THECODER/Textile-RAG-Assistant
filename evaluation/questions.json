@@ -1,0 +1,56 @@
+[
+  {
+    "id": "q1",
+    "type": "basic_answerable",
+    "question": "What is the standard moisture regain percentage for raw cotton fibers under standard atmospheric conditions?",
+    "expected_keywords": ["8.5%", "moisture regain"],
+    "expected_source": "technical_textile_standards.pdf",
+    "expected_page": 1,
+    "should_abstain": false
+  },
+  {
+    "id": "q2",
+    "type": "numerical_specification",
+    "question": "Under ASTM D5034, what are the minimum warp and filling tensile breaking forces for 150 GSM carded cotton fabric?",
+    "expected_keywords": ["350 N", "280 N", "ASTM D5034"],
+    "expected_source": "technical_textile_standards.pdf",
+    "expected_page": 1,
+    "should_abstain": false
+  },
+  {
+    "id": "q3",
+    "type": "numerical_specification",
+    "question": "What is the recommended English yarn count (Ne) and twist multiplier for shirting warp yarn?",
+    "expected_keywords": ["40s Ne", "3.8"],
+    "expected_source": "technical_textile_standards.pdf",
+    "expected_page": 2,
+    "should_abstain": false
+  },
+  {
+    "id": "q4",
+    "type": "multi_topic_specific",
+    "question": "What is the required soaping temperature for reactive dyeing fixation?",
+    "expected_keywords": ["95°C", "reactive"],
+    "expected_source": "technical_textile_standards.pdf",
+    "expected_page": 3,
+    "should_abstain": false
+  },
+  {
+    "id": "q5",
+    "type": "unanswerable_textile",
+    "question": "What is the exact glass transition temperature of polyether ether ketone (PEEK) monofilament geotextiles?",
+    "expected_keywords": [],
+    "expected_source": null,
+    "expected_page": null,
+    "should_abstain": true
+  },
+  {
+    "id": "q6",
+    "type": "unanswerable_out_of_domain",
+    "question": "What was the total box office revenue of the movie Titanic in 1997?",
+    "expected_keywords": [],
+    "expected_source": null,
+    "expected_page": null,
+    "should_abstain": true
+  }
+]

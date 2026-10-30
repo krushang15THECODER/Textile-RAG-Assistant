@@ -1,0 +1,29 @@
+# Virtual Environment
+.venv/
+venv/
+ENV/
+
+# Python Cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyd
+
+# Environment Secrets & API Keys
+.env
+!.env.example
+
+# Vector Database and Local Persistent Data
+data/chroma_db/
+data/test_chroma_db/
+data/eval_chroma_db/
+data/*.pdf
+
+# Streamlit
+.streamlit/
+
+# OS / Editor artifacts
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
