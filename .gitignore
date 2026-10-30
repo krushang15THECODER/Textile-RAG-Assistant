@@ -17,10 +17,13 @@ __pycache__/
 
 # Local Vector Databases
 data/chroma_db/
+
+# Test Vector Databases (Local tests only)
 data/test_chroma_db/
 data/test_retrieval_db/
 data/eval_chroma_db/
-# Local Uploaded Documents and Registry
+
+# Local Uploaded Documents
 data/documents/
 data/documents_registry.json
 

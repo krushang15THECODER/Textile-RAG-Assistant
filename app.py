@@ -528,12 +528,32 @@ button[data-testid="stBaseButton-headerNoPadding"] svg,
 [data-testid="stMetric"] {
     background: #ffffff !important;
     border: 1px solid var(--line) !important;
-    border-radius: 12px !important;
-    padding: 1.1rem 1.2rem !important;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.02) !important;
+    border-radius: 14px !important;
+    padding: 1.1rem 1.25rem !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02) !important;
+    min-height: 115px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
 }
-[data-testid="stMetricLabel"] p { color: var(--muted) !important; font-size: 0.82rem !important; }
-[data-testid="stMetricValue"] div { color: var(--forest-dark) !important; font-family: 'Playfair Display', Georgia, serif !important; font-weight: 600 !important; }
+[data-testid="stMetricLabel"] p {
+    color: var(--muted) !important;
+    font-size: 0.82rem !important;
+    font-weight: 500 !important;
+    margin-bottom: 0.25rem !important;
+}
+[data-testid="stMetricValue"],
+[data-testid="stMetricValue"] > div {
+    color: var(--forest-dark) !important;
+    font-family: 'Playfair Display', Georgia, serif !important;
+    font-weight: 600 !important;
+    font-size: clamp(1.15rem, 1.55vw, 1.65rem) !important;
+    line-height: 1.25 !important;
+    white-space: normal !important;
+    word-break: break-word !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -639,6 +659,27 @@ def sync_registry_with_vector_store() -> Dict[str, Dict[str, Any]]:
     return registry
 
 
+def ensure_default_documents_indexed():
+    """Auto-seed bundled technical reference PDFs if ChromaDB is empty on fresh cloud deployment."""
+    if vector_store.count() == 0:
+        deliverables_dir = Path("lace_knowledge_base_deliverables")
+        if deliverables_dir.exists():
+            pdfs = sorted(deliverables_dir.glob("*.pdf"))
+            for pdf_path in pdfs:
+                try:
+                    pages = extract_text_from_bytes(pdf_path.read_bytes(), pdf_path.name)
+                    if pages:
+                        doc_id = f"doc_{hashlib.md5(pdf_path.name.encode()).hexdigest()[:10]}"
+                        chunks = chunk_pages(pages, chunk_size=500, chunk_overlap=100, default_source=pdf_path.name)
+                        for c in chunks:
+                            c["metadata"]["document_id"] = doc_id
+                            c["metadata"]["source"] = pdf_path.name
+                        vector_store.add_chunks(chunks)
+                except Exception as e:
+                    print(f"Error bootstrapping {pdf_path.name}: {e}")
+
+
+ensure_default_documents_indexed()
 sync_registry_with_vector_store()
 
 if "messages" not in st.session_state:
