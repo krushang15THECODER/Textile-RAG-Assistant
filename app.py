@@ -53,46 +53,63 @@ st.markdown("""
 
 header[data-testid="stHeader"] {
     background: transparent !important;
-    color: transparent !important;
-    height: auto !important;
-    min-height: 0 !important;
-    padding: 0 !important;
-    margin: 0 !important;
     border: none !important;
     box-shadow: none !important;
     pointer-events: none !important;
+    z-index: 999990 !important;
 }
 
-header[data-testid="stHeader"] [data-testid="stToolbar"],
-header[data-testid="stHeader"] .stAppToolbar,
-header[data-testid="stHeader"] #MainMenu,
+[data-testid="stToolbar"] {
+    background: transparent !important;
+    pointer-events: none !important;
+}
+
+/* Hide only the clutter: Cloud share/star/edit/menu toolbar actions and decoration */
+[data-testid="stToolbarActions"],
+[data-testid="stStatusWidget"],
+#MainMenu,
+.stAppDeployButton,
 [data-testid="stDecoration"] {
     display: none !important;
     visibility: hidden !important;
 }
 
-header[data-testid="stHeader"] [data-testid="stSidebarCollapsedControl"],
-[data-testid="stSidebarCollapsedControl"] {
-    display: flex !important;
+/* Force expand sidebar arrow button to be visible, styled, and clickable in all Streamlit versions */
+button[data-testid="stExpandSidebarButton"],
+[data-testid="stExpandSidebarButton"],
+[data-testid="stSidebarCollapsedControl"],
+button[data-testid="stSidebarCollapseButton"] {
+    display: inline-flex !important;
     visibility: visible !important;
+    opacity: 1 !important;
     pointer-events: auto !important;
     background: #ffffff !important;
-    border: 1px solid var(--line) !important;
-    border-radius: 8px !important;
-    padding: 2px !important;
-    margin-top: 10px !important;
-    margin-left: 10px !important;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
+    border: 1.5px solid #dedad0 !important;
+    border-radius: 9px !important;
+    padding: 4px 8px !important;
+    margin: 8px 0 0 8px !important;
+    box-shadow: 0 2px 8px rgba(27, 53, 39, 0.08) !important;
     cursor: pointer !important;
-    z-index: 999992 !important;
+    z-index: 999999 !important;
+    transition: all 0.2s ease !important;
 }
 
-header[data-testid="stHeader"] [data-testid="stSidebarCollapsedControl"] button,
-header[data-testid="stHeader"] [data-testid="stSidebarCollapsedControl"] svg,
-[data-testid="stSidebarCollapsedControl"] button,
-[data-testid="stSidebarCollapsedControl"] svg {
+button[data-testid="stExpandSidebarButton"]:hover,
+[data-testid="stSidebarCollapsedControl"]:hover {
+    background: #edf3ec !important;
+    border-color: #b8ccb6 !important;
+    transform: scale(1.05) !important;
+}
+
+button[data-testid="stExpandSidebarButton"] svg,
+button[data-testid="stExpandSidebarButton"] span,
+[data-testid="stSidebarCollapsedControl"] svg,
+button[data-testid="stSidebarCollapseButton"] svg {
     color: #1b3527 !important;
     fill: #1b3527 !important;
+    stroke: #1b3527 !important;
+    visibility: visible !important;
+    opacity: 1 !important;
 }
 
 .stApp {
