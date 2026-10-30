@@ -9,17 +9,22 @@ __pycache__/
 *$py.class
 *.pyd
 
-# Environment Secrets & API Keys
+# Environment Secrets
 .env
+.env.*
 !.env.example
+.streamlit/secrets.toml
 
-# Vector Database and Local Persistent Data
+# Local Vector Databases
 data/chroma_db/
 data/test_chroma_db/
+data/test_retrieval_db/
 data/eval_chroma_db/
-data/*.pdf
 
-# Streamlit
+# Temporary Test Data
+data/technical_textile_standards.pdf
+
+# Streamlit secrets
 .streamlit/
 
 # OS / Editor artifacts
