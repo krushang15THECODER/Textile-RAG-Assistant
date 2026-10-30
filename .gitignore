@@ -20,6 +20,9 @@ data/chroma_db/
 data/test_chroma_db/
 data/test_retrieval_db/
 data/eval_chroma_db/
+# Local Uploaded Documents and Registry
+data/documents/
+data/documents_registry.json
 
 # Temporary Test Data
 data/technical_textile_standards.pdf
