@@ -8,6 +8,8 @@ from typing import Any, Dict, List, Optional
 from dotenv import load_dotenv
 import streamlit as st
 
+from backend.config import BACKEND_URL
+from src.api_client import APIClient
 from src.chunking import chunk_pages
 try:
     from src.citations import format_citations_html, format_citations_markdown
@@ -949,6 +951,97 @@ if "is_admin" not in st.session_state:
 if "confirm_delete_id" not in st.session_state:
     st.session_state.confirm_delete_id = None
 
+if "current_conv_id" not in st.session_state:
+    st.session_state.current_conv_id = None
+
+# Initialize FastAPI client with session token from session state or query param
+token_candidate = st.session_state.get("auth_token") or st.query_params.get("token")
+api_client = APIClient(base_url=BACKEND_URL, session_token=token_candidate)
+
+# Auto-validate token on page load/refresh
+if token_candidate and "user" not in st.session_state:
+    ok_me, user_res = api_client.get_me()
+    if ok_me and isinstance(user_res, dict):
+        st.session_state.auth_token = token_candidate
+        st.session_state.user = user_res
+        st.session_state.logged_in = True
+        st.session_state.is_admin = (user_res.get("role") == "admin")
+        st.query_params["token"] = token_candidate
+    else:
+        st.session_state.auth_token = None
+        st.session_state.user = None
+        st.session_state.logged_in = False
+        st.session_state.is_admin = False
+        if "token" in st.query_params:
+            del st.query_params["token"]
+
+def render_auth_portal(client: APIClient):
+    st.markdown("""
+    <div class="hero-box" style="text-align: center; margin: 2rem auto; max-width: 580px;">
+        <span class="hero-eyebrow">ENTERPRISE SECURITY & KNOWLEDGE ARCHIVE</span>
+        <h1 style="font-size: 2.2rem; margin-top: 0.3rem;">LabhTex Intelligence<span>.</span></h1>
+        <p class="hero-p" style="margin: 0 auto; max-width: 460px;">
+            Authenticated access for textile engineers, fabric consultants, and authorized quality auditors.
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+
+    c1, c2, c3 = st.columns([1, 2, 1])
+    with c2:
+        tab_login, tab_register = st.tabs(["🔐 Sign In", "📝 Register Account"])
+
+        with tab_login:
+            with st.form("portal_login_form"):
+                st.markdown("##### Member Sign In")
+                login_email = st.text_input("Work Email", placeholder="engineer@labhtex.com")
+                login_password = st.text_input("Password", type="password", placeholder="Enter your password")
+                btn_login = st.form_submit_button("Sign In to Workspace", use_container_width=True)
+
+                if btn_login:
+                    if not login_email or not login_password:
+                        st.error("Please enter both email and password.")
+                    else:
+                        ok, res = client.login(login_email, login_password)
+                        if ok:
+                            st.session_state.auth_token = res["token"]
+                            st.session_state.user = res["user"]
+                            st.session_state.logged_in = True
+                            st.session_state.is_admin = (res["user"].get("role") == "admin")
+                            st.query_params["token"] = res["token"]
+                            st.rerun()
+                        else:
+                            st.error(f"Authentication failed: {res}")
+
+        with tab_register:
+            with st.form("portal_register_form"):
+                st.markdown("##### Account Registration")
+                reg_name = st.text_input("Full Name", placeholder="Arjun Sharma")
+                reg_email = st.text_input("Work Email", placeholder="arjun@labhtex.com")
+                reg_password = st.text_input("Password (min 12 characters)", type="password", placeholder="Create secure password")
+
+                with st.expander("🛡️ Administrator Provisioning (Optional)"):
+                    st.caption("Provide the administrator secret key if registering with administrative privileges.")
+                    reg_admin_key = st.text_input("Admin Registration Key", type="password", placeholder="Admin registration secret")
+
+                btn_reg = st.form_submit_button("Register Account", use_container_width=True)
+                if btn_reg:
+                    if not reg_name or not reg_email or not reg_password:
+                        st.error("Please fill in all required fields.")
+                    elif len(reg_password) < 12:
+                        st.error("Password must be at least 12 characters long.")
+                    else:
+                        ok, res = client.register(reg_name, reg_email, reg_password, admin_key=reg_admin_key if reg_admin_key else None)
+                        if ok:
+                            role_title = "Administrator" if res.get("role") == "admin" else "Textile Specialist"
+                            st.success(f"✓ Account successfully created as **{role_title}**! Please switch to 'Sign In' to log in.")
+                        else:
+                            st.error(f"Registration failed: {res}")
+
+# Gate unauthenticated sessions
+if not st.session_state.get("logged_in", False):
+    render_auth_portal(api_client)
+    st.stop()
+
 is_openrouter = bool(
     os.getenv("OPENROUTER_API_KEY")
     or os.getenv("LLM_PROVIDER") == "openrouter"
@@ -968,46 +1061,90 @@ with st.sidebar:
     st.markdown("""
     <div class="brand-card">
         <div class="brand-tag">ENTERPRISE RAG PLATFORM</div>
-        <div class="brand-title">Textile<br>Intelligence<span>.</span></div>
+        <div class="brand-title">LabhTex<br>Intelligence<span>.</span></div>
         <p class="brand-sub">Technical Auditing & Knowledge Workspace</p>
     </div>
     """, unsafe_allow_html=True)
 
-    if not st.session_state.is_admin:
-        st.markdown("""
-        <div style="background: rgba(0,0,0,0.18); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 10px 12px; margin-bottom: 12px;">
-            <div style="font-family: 'DM Mono', monospace; font-size: 0.65rem; color: #b8ccb6; letter-spacing: 0.12em; text-transform: uppercase;">Active Role</div>
-            <div style="font-size: 0.88rem; font-weight: 600; color: #f7f6f0; margin-top: 2px;">👤 Customer (Guest)</div>
-            <div style="font-size: 0.72rem; color: #a4bea9; margin-top: 4px;">Read-only access to approved knowledge base.</div>
-        </div>
-        """, unsafe_allow_html=True)
+    user_info = st.session_state.get("user", {})
+    user_name = user_info.get("name", "User")
+    user_email = user_info.get("email", "")
+    is_admin = (user_info.get("role") == "admin")
 
-        with st.expander("🔐 Admin Login"):
-            with st.form("admin_login_form"):
-                entered_password = st.text_input("Administrator Password", type="password", placeholder="Enter admin password")
-                login_btn = st.form_submit_button("Authenticate as Admin", use_container_width=True)
-                if login_btn:
-                    if entered_password == ADMIN_PASSWORD or entered_password == "admin":
-                        st.session_state.is_admin = True
-                        st.session_state.confirm_delete_id = None
-                        st.rerun()
-                    else:
-                        st.error("Invalid administrator credentials.")
-    else:
-        st.markdown("""
-        <div style="background: rgba(42, 76, 58, 0.45); border: 1px solid #5ee08b; border-radius: 8px; padding: 10px 12px; margin-bottom: 12px;">
-            <div style="font-family: 'DM Mono', monospace; font-size: 0.65rem; color: #9fe2b5; letter-spacing: 0.12em; text-transform: uppercase;">Active Role</div>
+    if is_admin:
+        st.markdown(f"""
+        <div style="background: rgba(42, 76, 58, 0.45); border: 1px solid #5ee08b; border-radius: 8px; padding: 10px 12px; margin-bottom: 10px;">
+            <div style="font-family: 'DM Mono', monospace; font-size: 0.65rem; color: #9fe2b5; letter-spacing: 0.12em; text-transform: uppercase;">Active Identity</div>
             <div style="font-size: 0.88rem; font-weight: 600; color: #ffffff; display: flex; align-items: center; gap: 6px; margin-top: 2px;">
-                <span class="pulse-dot"></span> 🛡️ Administrator (Authenticated)
+                <span class="pulse-dot"></span> 🛡️ {user_name}
             </div>
-            <div style="font-size: 0.72rem; color: #d0edd8; margin-top: 4px;">Full document upload, index & deletion privileges.</div>
+            <div style="font-size: 0.72rem; color: #d0edd8; margin-top: 2px;">{user_email} (Admin)</div>
+        </div>
+        """, unsafe_allow_html=True)
+    else:
+        st.markdown(f"""
+        <div style="background: rgba(0,0,0,0.18); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 10px 12px; margin-bottom: 10px;">
+            <div style="font-family: 'DM Mono', monospace; font-size: 0.65rem; color: #b8ccb6; letter-spacing: 0.12em; text-transform: uppercase;">Active Identity</div>
+            <div style="font-size: 0.88rem; font-weight: 600; color: #f7f6f0; margin-top: 2px;">👤 {user_name}</div>
+            <div style="font-size: 0.72rem; color: #a4bea9; margin-top: 2px;">{user_email}</div>
         </div>
         """, unsafe_allow_html=True)
 
-        if st.button("Log Out of Admin", use_container_width=True):
-            st.session_state.is_admin = False
-            st.session_state.confirm_delete_id = None
-            st.rerun()
+    if st.button("🚪 Log Out", use_container_width=True):
+        api_client.logout()
+        st.session_state.auth_token = None
+        st.session_state.user = None
+        st.session_state.logged_in = False
+        st.session_state.is_admin = False
+        st.session_state.current_conv_id = None
+        st.session_state.messages = []
+        if "token" in st.query_params:
+            del st.query_params["token"]
+        st.rerun()
+
+    st.markdown("<div style='height: 8px;'></div>", unsafe_allow_html=True)
+
+    # Conversation Archive (Persistent in MongoDB Atlas)
+    st.markdown("<div style='font-family:DM Mono,monospace;font-size:0.68rem;letter-spacing:0.12em;color:#b8ccb6;margin-bottom:6px;text-transform:uppercase;'>CONVERSATIONS</div>", unsafe_allow_html=True)
+
+    if st.button("➕ New Technical Inquiry", use_container_width=True):
+        st.session_state.current_conv_id = None
+        st.session_state.messages = []
+        st.rerun()
+
+    ok_convs, conv_list = api_client.list_conversations()
+    if ok_convs and conv_list:
+        curr_id = st.session_state.get("current_conv_id")
+        for c in conv_list[:12]:
+            c_id = c["id"]
+            c_title = c.get("title", "Inquiry")
+            is_active = (c_id == curr_id)
+            c_msgs = c.get("message_count", 0)
+            prefix = "🟢 " if is_active else "💬 "
+            label = f"{prefix}{c_title[:22]} ({c_msgs})"
+
+            if st.button(label, key=f"conv_select_{c_id}", use_container_width=True):
+                st.session_state.current_conv_id = c_id
+                ok_m, msgs = api_client.get_messages(c_id)
+                if ok_m:
+                    st.session_state.messages = msgs
+                st.rerun()
+
+        # If an active conversation is selected, provide Rename & Delete
+        if curr_id:
+            with st.expander("⚙️ Manage Active Chat"):
+                rename_title = st.text_input("New Title", key="input_rename_title")
+                if st.button("Rename", key="btn_apply_rename", use_container_width=True):
+                    if rename_title.strip():
+                        api_client.rename_conversation(curr_id, rename_title.strip())
+                        st.rerun()
+                if st.button("🗑️ Delete Chat", key="btn_del_chat", use_container_width=True):
+                    api_client.delete_conversation(curr_id)
+                    st.session_state.current_conv_id = None
+                    st.session_state.messages = []
+                    st.rerun()
+    else:
+        st.caption("No previous chats recorded.")
 
     st.markdown("<div style='height: 8px;'></div>", unsafe_allow_html=True)
 
@@ -1367,47 +1504,26 @@ elif page == "AI Assistant":
         prompt = st.session_state.pop("submitted_prompt")
 
     if prompt:
-        st.session_state.messages.append({"role": "user", "content": prompt})
+        # Create conversation in MongoDB if not active
+        if not st.session_state.get("current_conv_id"):
+            ok_c, new_c = api_client.create_conversation("New Technical Inquiry")
+            if ok_c:
+                st.session_state.current_conv_id = new_c["id"]
+
+        curr_conv_id = st.session_state.get("current_conv_id")
+
         with st.chat_message("user"):
             st.markdown(prompt)
 
         with st.chat_message("assistant"):
-            if vector_store.count() == 0:
-                answer = "No documents are currently indexed in the knowledge base. Please contact an administrator."
-                st.warning(answer)
-                st.session_state.messages.append({"role": "assistant", "content": answer})
+            with st.spinner("Synthesizing technical response from approved archive..."):
+                ok_resp, msg_data = api_client.send_message(curr_conv_id, prompt)
+
+            if ok_resp:
+                # Reload messages directly from MongoDB
+                ok_m, msgs = api_client.get_messages(curr_conv_id)
+                if ok_m:
+                    st.session_state.messages = msgs
+                st.rerun()
             else:
-                with st.spinner("Retrieving semantic passages & synthesizing evidence..."):
-                    retrieved_chunks = retrieve_context(prompt, top_k=4)
-                    result = generate_answer(query=prompt, retrieved_chunks=retrieved_chunks)
-
-                answer_text = result["answer"]
-                citations = result.get("citations", [])
-                citations_md = format_citations_markdown(citations) if citations else ""
-
-                if result.get("error"):
-                    st.error(f"**Generation Note:** {result['error']}")
-                elif result.get("abstained"):
-                    st.info(answer_text)
-                else:
-                    st.markdown(answer_text)
-
-                if citations_md:
-                    with st.expander("📑 Sources & Citations"):
-                        st.markdown(citations_md)
-
-                if retrieved_chunks:
-                    with st.expander("🔍 View Retrieved Evidence Chunks"):
-                        for c in retrieved_chunks:
-                            sim_pct = int(c.get("similarity", 0.0) * 100)
-                            st.markdown(f"**[{c.get('source', 'Unknown')}] Page {c.get('page_number', 1)}** (Relevance: `{sim_pct}%`)")
-                            st.caption(f"Chunk ID: `{c.get('chunk_id')}`")
-                            st.text(c.get("text", ""))
-                            st.divider()
-
-                st.session_state.messages.append({
-                    "role": "assistant",
-                    "content": answer_text,
-                    "citations_md": citations_md,
-                    "retrieved_chunks": retrieved_chunks
-                })
+                st.error(f"Error generating and persisting response: {msg_data}")
