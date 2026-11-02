@@ -356,20 +356,21 @@ def test_chat_persistence_and_deletion_cascade(setup_mock_db):
 
 def test_mongodb_unavailable_handling():
     """Scenario 12: Clear error raised when MongoDB is unavailable, with NO SQLite fallback."""
-    from backend.database import get_client
-    import os
+    import backend.database as db_mod
 
-    # Temporarily clear MONGODB_URI to test strict no-fallback error handling
-    orig = os.environ.get("MONGODB_URI")
+    old_client = db_mod._mongo_client
+    old_func = db_mod.get_mongodb_uri
     try:
-        os.environ["MONGODB_URI"] = ""
+        db_mod._mongo_client = None
+        db_mod.get_mongodb_uri = lambda: ""
         with pytest.raises(DatabaseUnavailableError) as exc_info:
-            get_client()
+            db_mod.get_client()
         assert "MONGODB_URI is not set" in str(exc_info.value)
         assert "SQLite" not in str(exc_info.value)  # Absolutely no SQLite fallback
     finally:
-        if orig is not None:
-            os.environ["MONGODB_URI"] = orig
+        db_mod._mongo_client = old_client
+        db_mod.get_mongodb_uri = old_func
+    print("PASS: test_mongodb_unavailable_handling")
     print("PASS: test_mongodb_unavailable_handling")
 
 
@@ -387,16 +388,19 @@ def main():
     test_session_idle_timeout(mock_db)
     test_session_revocation_on_logout(mock_db)
 
-    import types
-    dummy_monkey = types.SimpleNamespace(setattr=lambda obj, attr, val: setattr(__import__(obj.__module__, fromlist=[obj.__name__]), attr, val) if hasattr(obj, '__module__') else None)
+    class DummyMonkeyPatch:
+        def setattr(self, target, val=None, **kwargs):
+            if isinstance(target, str):
+                mod_name, attr = target.rsplit(".", 1)
+                import sys
+                mod = sys.modules.get(mod_name) or __import__(mod_name, fromlist=[attr])
+                setattr(mod, attr, val)
+
+    dummy_patch = DummyMonkeyPatch()
 
     # Test admin separation with mock
-    from backend import security
-    old_key = security.ADMIN_REGISTRATION_KEY
-    security.ADMIN_REGISTRATION_KEY = "TestSecret2026"
-    test_admin_registration_and_role_separation(mock_db, types.SimpleNamespace(setattr=lambda o, a, v: setattr(security, a, v)))
-    test_role_based_access_control_on_admin_endpoints(mock_db, types.SimpleNamespace(setattr=lambda o, a, v: setattr(security, a, v)))
-    security.ADMIN_REGISTRATION_KEY = old_key
+    test_admin_registration_and_role_separation(mock_db, dummy_patch)
+    test_role_based_access_control_on_admin_endpoints(mock_db, dummy_patch)
 
     test_conversation_ownership_and_cross_user_isolation(mock_db)
     test_chat_persistence_and_deletion_cascade(mock_db)

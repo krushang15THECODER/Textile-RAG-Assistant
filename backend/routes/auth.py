@@ -33,6 +33,7 @@ def serialize_user(user: dict) -> UserResponse:
 
 
 @router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/register/", response_model=UserResponse, status_code=status.HTTP_201_CREATED, include_in_schema=False)
 async def register(req: UserRegisterRequest):
     """Register a new user account with bcrypt password hashing."""
     db = get_db()
@@ -77,6 +78,7 @@ async def register(req: UserRegisterRequest):
 
 
 @router.post("/login", response_model=LoginResponse)
+@router.post("/login/", response_model=LoginResponse, include_in_schema=False)
 async def login(req: UserLoginRequest, request: Request, response: Response):
     """Authenticate user, create session in MongoDB, and set HttpOnly session cookie."""
     client_ip = request.client.host if request.client else "unknown"
@@ -119,6 +121,15 @@ async def login(req: UserLoginRequest, request: Request, response: Response):
         user=serialize_user(user),
         token=raw_token,
         expires_at=expires_at
+    )
+
+
+@router.get("/login", include_in_schema=False)
+@router.get("/login/", include_in_schema=False)
+async def get_login_not_allowed():
+    raise HTTPException(
+        status_code=status.HTTP_405_METHOD_NOT_ALLOWED,
+        detail="Login endpoint only accepts POST requests. If you are accessing this from a client, ensure BACKEND_URL uses 'https://' rather than 'http://' to avoid redirect method stripping."
     )
 
 
