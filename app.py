@@ -28,7 +28,6 @@ load_dotenv(override=True)
 DOCUMENTS_DIR = Path("data") / "documents"
 DOCUMENTS_DIR.mkdir(parents=True, exist_ok=True)
 REGISTRY_PATH = Path("data") / "documents_registry.json"
-ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "admin123")
 
 st.set_page_config(
     page_title="Textile Intelligence — Grounded RAG Platform",
