@@ -1,3 +1,4 @@
+import html
 from typing import Any, Dict, List
 
 ABSTENTION_PHRASES = [
@@ -50,14 +51,21 @@ def format_citations_markdown(citations: List[Dict[str, Any]]) -> str:
     if not citations:
         return ""
 
-    lines = ["**Sources & Citations:**\n"]
+    lines = []
     for idx, c in enumerate(citations, start=1):
         source = c["source"]
         page = c["page_number"]
         sim_pct = int(c.get("similarity", 0.0) * 100)
-        snippet = c.get("snippet", "").replace("\n", " ")
+        snippet = c.get("snippet", "").replace("\n", " ").strip()
 
         lines.append(f"- **[{idx}] {source}** — *Page {page}* (Relevance: `{sim_pct}%`)")
-        lines.append(f"  > \"{snippet}\"\n")
+        if snippet:
+            lines.append(f"  > \"{snippet}\"\n")
 
     return "\n".join(lines)
+
+
+# Alias to maintain full backwards compatibility without raw HTML rendering issues
+format_citations_html = format_citations_markdown
+
+

@@ -38,5 +38,25 @@
     "chunk_count": 4,
     "page_count": "Indexed",
     "status": "Indexed"
+  },
+  "doc_275a73a5fe": {
+    "document_id": "doc_275a73a5fe",
+    "filename": "LabhTex_Master_Guide_Lace_Types_Applications_and_Garment_Selection.pdf",
+    "file_path": "data\\documents\\doc_275a73a5fe_LabhTex_Master_Guide_Lace_Types_Applications_and_Garment_Selection.pdf",
+    "file_size": 256682,
+    "upload_date": "2026-11-02 19:04",
+    "chunk_count": 669,
+    "page_count": 69,
+    "status": "Indexed (669 chunks)"
+  },
+  "doc_b7bd1b96d1": {
+    "document_id": "doc_b7bd1b96d1",
+    "filename": "Lace_Applications_Quick_Reference.pdf",
+    "file_path": "data\\documents\\doc_b7bd1b96d1_Lace_Applications_Quick_Reference.pdf",
+    "file_size": 13004,
+    "upload_date": "2026-11-02 19:04",
+    "chunk_count": 21,
+    "page_count": 4,
+    "status": "Indexed (21 chunks)"
   }
 }

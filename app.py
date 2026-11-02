@@ -9,7 +9,13 @@ from dotenv import load_dotenv
 import streamlit as st
 
 from src.chunking import chunk_pages
-from src.citations import format_citations_markdown
+try:
+    from src.citations import format_citations_html, format_citations_markdown
+except ImportError:
+    import importlib
+    import src.citations
+    importlib.reload(src.citations)
+    from src.citations import format_citations_html, format_citations_markdown
 from src.generation import generate_answer
 from src.ingestion import extract_text_from_bytes
 from src.retrieval import retrieve_context
@@ -554,6 +560,258 @@ button[data-testid="stBaseButton-headerNoPadding"] svg,
     overflow: visible !important;
     text-overflow: clip !important;
 }
+
+/* ==============================================================================
+   Smooth Scrolling, Entrance Animations & Micro-Interactions
+   ============================================================================== */
+html, body, [data-testid="stAppViewContainer"], [data-testid="stMain"], .main, section.main {
+    scroll-behavior: smooth !important;
+    -webkit-overflow-scrolling: touch !important;
+    overscroll-behavior-y: auto !important;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+@keyframes fadeSlideUp {
+    0% {
+        opacity: 0;
+        transform: translateY(16px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes gentleCardFloat {
+    0% {
+        opacity: 0;
+        transform: translateY(12px) scale(0.995);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* Staggered entrance animations */
+.hero-box {
+    animation: fadeSlideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+    transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.35s ease, border-color 0.25s ease;
+}
+.hero-box:hover {
+    transform: translateY(-2px);
+    border-color: #c9d8c8;
+    box-shadow: 0 8px 28px rgba(27, 53, 39, 0.06);
+}
+
+[data-testid="stMetric"] {
+    animation: fadeSlideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+    transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.35s ease, border-color 0.25s ease !important;
+}
+[data-testid="column"]:nth-child(1) [data-testid="stMetric"] { animation-delay: 0.04s; }
+[data-testid="column"]:nth-child(2) [data-testid="stMetric"] { animation-delay: 0.08s; }
+[data-testid="column"]:nth-child(3) [data-testid="stMetric"] { animation-delay: 0.12s; }
+[data-testid="column"]:nth-child(4) [data-testid="stMetric"] { animation-delay: 0.16s; }
+
+[data-testid="stMetric"]:hover {
+    transform: translateY(-4px) !important;
+    border-color: #b8ccb6 !important;
+    box-shadow: 0 10px 26px rgba(27, 53, 39, 0.07) !important;
+}
+
+.arch-card {
+    animation: fadeSlideUp 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
+    transition: transform 0.32s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.32s ease, border-color 0.25s ease !important;
+}
+.arch-card:hover {
+    transform: translateY(-4px) !important;
+    border-color: #a4c0a1 !important;
+    box-shadow: 0 12px 28px rgba(27, 53, 39, 0.08) !important;
+}
+
+[data-testid="stChatMessage"] {
+    animation: fadeSlideUp 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease !important;
+}
+[data-testid="stChatMessage"]:hover {
+    transform: translateY(-1.5px) !important;
+    box-shadow: 0 6px 20px rgba(27, 53, 39, 0.04) !important;
+}
+
+.prompt-pill-btn {
+    animation: fadeSlideUp 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.prompt-pill-btn:nth-child(1) { animation-delay: 0.05s; }
+.prompt-pill-btn:nth-child(2) { animation-delay: 0.1s; }
+.prompt-pill-btn:nth-child(3) { animation-delay: 0.15s; }
+
+.prompt-pill-btn > button {
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+}
+.prompt-pill-btn > button:hover {
+    transform: translateY(-3px) scale(1.01) !important;
+    box-shadow: 0 6px 18px rgba(27, 53, 39, 0.08) !important;
+    border-color: #a4c0a1 !important;
+    color: #1b3527 !important;
+}
+.prompt-pill-btn > button:active {
+    transform: translateY(0) scale(0.99) !important;
+}
+
+.stButton > button {
+    transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+}
+.stButton > button:active {
+    transform: scale(0.98) !important;
+}
+
+
+/* ==============================================================================
+   Distinct Verified Sources & Evidence Cards Styling
+   ============================================================================== */
+.citation-evidence-box {
+    margin-top: 1.25rem;
+    margin-bottom: 0.75rem;
+    background: linear-gradient(180deg, #f7f9f6 0%, #edf3eb 100%);
+    border: 1px solid #c9d8c7;
+    border-left: 4px solid #2a4c3a;
+    border-radius: 10px;
+    padding: 14px 18px;
+    box-shadow: 0 2px 8px rgba(27, 53, 39, 0.04);
+}
+
+.citation-box-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 9px;
+    margin-bottom: 11px;
+    border-bottom: 1px dashed #cad9c9;
+}
+
+.citation-box-title {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    color: #b3593b;
+    text-transform: uppercase;
+}
+
+.citation-header-icon {
+    font-size: 0.95rem;
+}
+
+.citation-total-badge {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.70rem;
+    font-weight: 600;
+    color: #243f31;
+    background: #e2ede0;
+    border: 1px solid #c2d7bf;
+    padding: 2px 9px;
+    border-radius: 12px;
+}
+
+.citation-items-container {
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+}
+
+.citation-item-card {
+    background: #ffffff;
+    border: 1px solid #dae5d9;
+    border-radius: 7px;
+    padding: 10px 14px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.citation-item-card:hover {
+    transform: translateY(-1.5px);
+    border-color: #a4c0a2;
+    box-shadow: 0 4px 12px rgba(27, 53, 39, 0.06);
+}
+
+.citation-item-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 7px;
+}
+
+.citation-index-badge {
+    background: #1b3527;
+    color: #ffffff;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 4px;
+    line-height: 1.2;
+}
+
+.citation-doc-name {
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 600;
+    font-size: 0.88rem;
+    color: #1b3527;
+    word-break: break-word;
+    margin-right: auto;
+}
+
+.citation-meta-pill {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+    padding: 2px 8px;
+    border-radius: 4px;
+    line-height: 1.2;
+    white-space: nowrap;
+}
+
+.citation-meta-pill.page-pill {
+    background: #f0f4ef;
+    color: #385f4b;
+    border: 1px solid #cedecc;
+    font-weight: 500;
+}
+
+.citation-meta-pill.rel-pill {
+    background: #eaf4e8;
+    color: #1e6933;
+    border: 1px solid #bde2bf;
+    font-weight: 600;
+}
+
+.citation-snippet-quote {
+    font-family: 'DM Sans', -apple-system, sans-serif;
+    font-size: 0.83rem;
+    line-height: 1.48;
+    color: #4a574d;
+    font-style: italic;
+    background: #fbfdfa;
+    border-left: 3px solid #8eaf8b;
+    padding: 7px 12px;
+    border-radius: 0 5px 5px 0;
+    margin-top: 7px;
+    word-break: break-word;
+}
+
+[data-testid="stChatMessage"] blockquote {
+    background: #f6f9f5 !important;
+    border-left: 3px solid #8fae89 !important;
+    color: #445348 !important;
+    font-style: italic !important;
+    padding: 6px 14px !important;
+    border-radius: 0 6px 6px 0 !important;
+    margin: 8px 0 !important;
+}
+
 </style>
 """, unsafe_allow_html=True)
 
@@ -691,7 +949,20 @@ if "is_admin" not in st.session_state:
 if "confirm_delete_id" not in st.session_state:
     st.session_state.confirm_delete_id = None
 
-api_key_set = bool(os.getenv("GEMINI_API_KEY") and os.getenv("GEMINI_API_KEY") != "your_gemini_api_key_here")
+is_openrouter = bool(
+    os.getenv("OPENROUTER_API_KEY")
+    or os.getenv("LLM_PROVIDER") == "openrouter"
+    or (os.getenv("GEMINI_API_KEY") and os.getenv("GEMINI_API_KEY").startswith("sk-or-"))
+)
+active_llm_name = (
+    f"OpenRouter ({os.getenv('OPENROUTER_MODEL', 'meta-llama/llama-3.3-70b-instruct')})"
+    if is_openrouter
+    else f"Gemini ({os.getenv('GEMINI_MODEL', 'gemini-3.8-flash')})"
+)
+api_key_set = bool(
+    (os.getenv("OPENROUTER_API_KEY") and os.getenv("OPENROUTER_API_KEY") != "your_openrouter_api_key_here")
+    or (os.getenv("GEMINI_API_KEY") and os.getenv("GEMINI_API_KEY") != "your_gemini_api_key_here")
+)
 
 with st.sidebar:
     st.markdown("""
@@ -769,7 +1040,7 @@ with st.sidebar:
                 • PyMuPDF Extraction<br>
                 • all-MiniLM-L6-v2 (384d)<br>
                 • ChromaDB Persistent<br>
-                • Gemini 3.8 Flash
+                • {active_llm_name}
             </div>
             <div style="border-top: 1px solid rgba(255,255,255,0.15); margin-top: 8px; padding-top: 8px; font-family:'DM Mono',monospace; font-size:0.73rem; line-height: 1.6;">
                 <div style="color: #bde4c8;">Vector Database: <strong style="color: #ffffff;">{vector_store.count()} chunks</strong></div>
@@ -859,7 +1130,7 @@ if page == "Overview":
                 <strong>Documents Path:</strong> <code>data/documents</code><br>
                 <strong>Distance Metric:</strong> Cosine Similarity (1 - distance)<br>
                 <strong>Embedding Model:</strong> <code>{embedding_model}</code><br>
-                <strong>Synthesis Model:</strong> <code>Gemini 3.8 Flash</code><br>
+                <strong>Synthesis Model:</strong> <code>{active_llm_name}</code><br>
                 <strong>Chunk Geometry:</strong> 500 chars (100 char overlap)
             </p>
         </div>
@@ -1078,7 +1349,8 @@ elif page == "AI Assistant":
             st.markdown(message["content"])
 
             if message.get("citations_md"):
-                st.markdown(message["citations_md"])
+                with st.expander("📑 Sources & Citations"):
+                    st.markdown(message["citations_md"])
 
             chunks = message.get("retrieved_chunks", [])
             if chunks:
@@ -1121,7 +1393,8 @@ elif page == "AI Assistant":
                     st.markdown(answer_text)
 
                 if citations_md:
-                    st.markdown(citations_md)
+                    with st.expander("📑 Sources & Citations"):
+                        st.markdown(citations_md)
 
                 if retrieved_chunks:
                     with st.expander("🔍 View Retrieved Evidence Chunks"):

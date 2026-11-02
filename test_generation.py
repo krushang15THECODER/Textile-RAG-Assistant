@@ -2,7 +2,7 @@
 Unit tests for generation and citations module.
 """
 
-from src.citations import extract_citations, format_citations_markdown, is_abstention
+from src.citations import extract_citations, format_citations_html, format_citations_markdown, is_abstention
 from src.generation import generate_answer
 
 
@@ -42,6 +42,10 @@ def test_citations_extraction():
     md = format_citations_markdown(cites)
     assert "**[1] spinning.pdf**" in md
     assert "*Page 1*" in md
+
+    html_out = format_citations_html(cites)
+    assert "**[1] spinning.pdf**" in html_out
+    assert "*Page 1*" in html_out
     print("PASS: test_citations_extraction")
 
 
