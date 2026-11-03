@@ -133,9 +133,21 @@ button[data-testid="stSidebarCollapseButton"] svg {
 
 @media (max-width: 768px) {
     .block-container {
-        padding-top: 1.5rem !important;
-        padding-left: 1rem !important;
-        padding-right: 1rem !important;
+        padding-top: 1.2rem !important;
+        padding-left: 0.85rem !important;
+        padding-right: 0.85rem !important;
+        padding-bottom: 2rem !important;
+    }
+    .hero-box {
+        padding: 1.4rem 1.25rem !important;
+        border-radius: 14px !important;
+    }
+    .arch-card {
+        padding: 1.15rem 1.15rem !important;
+    }
+    .callout-banner {
+        padding: 16px 18px !important;
+        border-radius: 12px !important;
     }
 }
 
