@@ -974,6 +974,21 @@ if token_candidate and "user" not in st.session_state:
         if "token" in st.query_params:
             del st.query_params["token"]
 
+def display_clean_error(title: str, error_msg: Any):
+    """Present a clean, professional user alert with optional collapsible technical details."""
+    raw = str(error_msg)
+    is_technical = any(k in raw for k in (
+        "SSL handshake", "TLSV1_ALERT", "Traceback", "TopologyDescription",
+        "configured timeouts", "AutoReconnect", "ServerDescription", "socketTimeoutMS"
+    ))
+    if is_technical:
+        st.error(f"⚠️ **{title}**: Database service is temporarily unreachable.")
+        with st.expander("🛠️ View Diagnostic Details", expanded=False):
+            st.code(raw, language="text")
+            st.caption("Hint: Check MongoDB Atlas Network Access to ensure `0.0.0.0/0` is Active.")
+    else:
+        st.error(f"⚠️ **{title}**: {raw}")
+
 def render_auth_portal(client: APIClient):
     st.markdown("""
     <div class="hero-box" style="text-align: center; margin: 2rem auto; max-width: 580px;">
@@ -1009,7 +1024,7 @@ def render_auth_portal(client: APIClient):
                             st.query_params["token"] = res["token"]
                             st.rerun()
                         else:
-                            st.error(f"Authentication failed: {res}")
+                            display_clean_error("Authentication Failed", res)
 
         with tab_register:
             with st.form("portal_register_form"):
@@ -1034,7 +1049,7 @@ def render_auth_portal(client: APIClient):
                             role_title = "Administrator" if res.get("role") == "admin" else "Textile Specialist"
                             st.success(f"✓ Account successfully created as **{role_title}**! Please switch to 'Sign In' to log in.")
                         else:
-                            st.error(f"Registration failed: {res}")
+                            display_clean_error("Registration Failed", res)
 
 # Gate unauthenticated sessions
 if not st.session_state.get("logged_in", False):
@@ -1525,4 +1540,4 @@ elif page == "AI Assistant":
                     st.session_state.messages = msgs
                 st.rerun()
             else:
-                st.error(f"Error generating and persisting response: {msg_data}")
+                display_clean_error("Response Error", msg_data)

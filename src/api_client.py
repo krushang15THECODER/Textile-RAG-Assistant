@@ -47,26 +47,32 @@ class APIClient:
         """Safely extract error message without throwing JSONDecodeError on HTML responses."""
         try:
             data = resp.json()
-            if isinstance(data, dict) and "detail" in data:
-                return str(data["detail"])
+            if isinstance(data, dict):
+                detail = data.get("detail") or data.get("message") or data.get("error")
+                if detail:
+                    detail_str = str(detail)
+                    if any(k in detail_str for k in ("SSL handshake", "TLSV1_ALERT", "TopologyDescription", "configured timeouts")):
+                        return (
+                            "Database service is temporarily unreachable (SSL / Network Access). "
+                            "Please ensure '0.0.0.0/0' is Active in your MongoDB Atlas Network Access."
+                        )
+                    return detail_str
             return str(data)
         except Exception:
             status = resp.status_code
             if status == 405:
                 return (
-                    f"Backend returned HTTP 405 Method Not Allowed at '{resp.url}'. "
-                    "This happens when BACKEND_URL points to Streamlit or localhost instead of your active Render Web Service, "
-                    "or when an HTTP redirect stripped POST data to GET. Please check BACKEND_URL in Streamlit Secrets."
+                    "Service endpoint not allowed (HTTP 405). "
+                    "Please verify that BACKEND_URL in Streamlit Secrets points to your Render backend."
                 )
             elif status in (502, 503, 504):
                 return (
-                    f"Backend service is temporarily unavailable (HTTP {status}). "
-                    "If hosted on Render Free Tier, the backend service is likely spinning up from idle "
-                    "(please wait 30-50 seconds and try again)."
+                    f"Backend service is waking up (HTTP {status}). "
+                    "Please wait 30 seconds and try again."
                 )
             elif status == 404:
-                return f"Backend endpoint not found (HTTP 404) at '{resp.url}'. Please verify your BACKEND_URL."
-            return f"Backend returned HTTP {status}: {resp.text[:120].strip()}"
+                return f"Backend service endpoint not found (HTTP 404). Please verify your BACKEND_URL."
+            return f"Backend service returned HTTP {status}."
 
     def register(self, name: str, email: str, password: str, admin_key: Optional[str] = None) -> Tuple[bool, Any]:
         if self.misconfigured_url_error:

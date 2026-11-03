@@ -51,9 +51,14 @@ app.add_middleware(
 
 @app.exception_handler(DatabaseUnavailableError)
 async def database_unavailable_handler(request: Request, exc: DatabaseUnavailableError):
+    # Log technical detail for backend diagnostic logs
+    print(f"[ERROR] Database unavailable: {exc}")
+    clean_msg = "Database service is temporarily unavailable. Please verify connectivity or try again shortly."
+    if "SSL handshake failed" in str(exc) or "TLSV1_ALERT" in str(exc):
+        clean_msg = "Database connection failed (SSL handshake). Please ensure '0.0.0.0/0' is whitelisted in MongoDB Atlas Network Access."
     return JSONResponse(
         status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-        content={"detail": str(exc)}
+        content={"detail": clean_msg, "diagnostic": str(exc)}
     )
 
 
