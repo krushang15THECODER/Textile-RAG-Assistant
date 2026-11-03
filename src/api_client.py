@@ -22,6 +22,15 @@ class APIClient:
         self.session_token = session_token
         self.session = requests.Session()
 
+        # Check if BACKEND_URL was accidentally set to the Streamlit frontend URL
+        if "streamlit.app" in raw_url:
+            self.misconfigured_url_error = (
+                f"BACKEND_URL is set to your Streamlit frontend URL ({raw_url}). "
+                "BACKEND_URL must point to your FastAPI backend deployed on Render (e.g. https://<service-name>.onrender.com), NOT Streamlit!"
+            )
+        else:
+            self.misconfigured_url_error = None
+
     def _get_headers(self) -> Dict[str, str]:
         headers = {}
         if self.session_token:
@@ -43,7 +52,13 @@ class APIClient:
             return str(data)
         except Exception:
             status = resp.status_code
-            if status in (502, 503, 504):
+            if status == 405:
+                return (
+                    f"Backend returned HTTP 405 Method Not Allowed at '{resp.url}'. "
+                    "This happens when BACKEND_URL points to Streamlit or localhost instead of your active Render Web Service, "
+                    "or when an HTTP redirect stripped POST data to GET. Please check BACKEND_URL in Streamlit Secrets."
+                )
+            elif status in (502, 503, 504):
                 return (
                     f"Backend service is temporarily unavailable (HTTP {status}). "
                     "If hosted on Render Free Tier, the backend service is likely spinning up from idle "
@@ -54,6 +69,8 @@ class APIClient:
             return f"Backend returned HTTP {status}: {resp.text[:120].strip()}"
 
     def register(self, name: str, email: str, password: str, admin_key: Optional[str] = None) -> Tuple[bool, Any]:
+        if self.misconfigured_url_error:
+            return False, self.misconfigured_url_error
         url = f"{self.base_url}/api/auth/register"
         payload = {
             "name": name,
@@ -74,6 +91,8 @@ class APIClient:
             return False, f"Could not reach backend service: {e}"
 
     def login(self, email: str, password: str) -> Tuple[bool, Any]:
+        if self.misconfigured_url_error:
+            return False, self.misconfigured_url_error
         url = f"{self.base_url}/api/auth/login"
         payload = {"email": email, "password": password}
         try:
