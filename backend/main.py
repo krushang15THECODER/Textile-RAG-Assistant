@@ -79,9 +79,14 @@ async def health_check():
     except Exception as e:
         db_status = f"unavailable: {e}"
 
+    import sys
+    import ssl
     return {
         "status": "online",
         "service": "LabhTex Textile Intelligence Backend",
+        "version": "2.3.0",
+        "python": sys.version.split()[0],
+        "openssl": ssl.OPENSSL_VERSION,
         "database": db_status
     }
 

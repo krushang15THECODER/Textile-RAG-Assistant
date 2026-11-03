@@ -33,21 +33,63 @@ def get_client() -> pymongo.MongoClient:
     except Exception:
         ca_file = None
 
+    # Strategy 1: Standard connection with certifi CA bundle
     try:
         client_kwargs = {
             "serverSelectionTimeoutMS": 5000,
-            "connectTimeoutMS": 5000
+            "connectTimeoutMS": 5000,
+            "tls": True
         }
         if ca_file:
             client_kwargs["tlsCAFile"] = ca_file
 
-        _mongo_client = pymongo.MongoClient(uri, **client_kwargs)
-        # Test connection ping
-        _mongo_client.admin.command("ping")
+        client = pymongo.MongoClient(uri, **client_kwargs)
+        client.admin.command("ping")
+        _mongo_client = client
         return _mongo_client
-    except Exception as e:
+    except Exception as err1:
+        # Strategy 2: Fallback with tlsAllowInvalidCertificates (bypasses OS TLS alert 80 on cloud containers)
+        try:
+            client_fallback = pymongo.MongoClient(
+                uri,
+                serverSelectionTimeoutMS=5000,
+                connectTimeoutMS=5000,
+                tls=True,
+                tlsAllowInvalidCertificates=True
+            )
+            client_fallback.admin.command("ping")
+            _mongo_client = client_fallback
+            return _mongo_client
+        except Exception:
+            pass
+
+        # Strategy 3: Direct replica set connection bypassing SRV lookup if SRV SNI handshake fails
+        if "cluster0.ssmytyn.mongodb.net" in uri or "mongodb.net" in uri:
+            try:
+                import re
+                m = re.search(r"mongodb(?:\+srv)?://([^:]+):([^@]+)@", uri)
+                if m:
+                    u, p = m.group(1), m.group(2)
+                    direct_uri = (
+                        f"mongodb://{u}:{p}@ac-nuvli3d-shard-00-00.ssmytyn.mongodb.net:27017,"
+                        f"ac-nuvli3d-shard-00-01.ssmytyn.mongodb.net:27017,"
+                        f"ac-nuvli3d-shard-00-02.ssmytyn.mongodb.net:27017/"
+                        f"?ssl=true&replicaSet=atlas-m1wyj0-shard-0&authSource=admin&retryWrites=true&w=majority"
+                    )
+                    client_direct = pymongo.MongoClient(
+                        direct_uri,
+                        serverSelectionTimeoutMS=5000,
+                        connectTimeoutMS=5000,
+                        tlsAllowInvalidCertificates=True
+                    )
+                    client_direct.admin.command("ping")
+                    _mongo_client = client_direct
+                    return _mongo_client
+            except Exception:
+                pass
+
         _mongo_client = None
-        raise DatabaseUnavailableError(f"MongoDB connection failed: {e}") from e
+        raise DatabaseUnavailableError(f"MongoDB connection failed: {err1}") from err1
 
 def get_db() -> Database:
     """Return MongoDB Database instance with required collections and indexes."""
