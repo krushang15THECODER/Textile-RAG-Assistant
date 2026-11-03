@@ -1226,71 +1226,178 @@ if page in ["Knowledge Base"]:
         st.stop()
 
 if page == "Overview":
-    st.markdown("""
-    <div class="hero-box">
-        <div class="hero-content">
-            <span class="hero-eyebrow">OVERVIEW & ARCHITECTURAL TELEMETRY</span>
-            <h1>Real Database Statistics</h1>
-            <p class="hero-p">
-                Real-time operational metrics across persistent ChromaDB collections, vector embeddings,
-                and indexed technical textile literature.
-            </p>
+    if st.session_state.is_admin:
+        st.markdown("""
+        <div class="hero-box">
+            <div class="hero-content">
+                <span class="hero-eyebrow">ADMINISTRATIVE TELEMETRY & SYSTEM HEALTH</span>
+                <h1>Real Database Statistics</h1>
+                <p class="hero-p">
+                    Real-time operational metrics across persistent ChromaDB collections, vector embeddings,
+                    and indexed technical textile literature.
+                </p>
+            </div>
         </div>
-    </div>
-    """, unsafe_allow_html=True)
+        """, unsafe_allow_html=True)
 
-    registry = sync_registry_with_vector_store()
-    total_indexed_sources = len(vector_store.get_indexed_sources())
-    total_chunks = vector_store.count()
-    collection_name = vector_store.collection_name
-    embedding_model = "all-MiniLM-L6-v2 (384-dimensional dense vectors)"
-    db_connected = True
+        registry = sync_registry_with_vector_store()
+        total_indexed_sources = len(vector_store.get_indexed_sources())
+        total_chunks = vector_store.count()
+        collection_name = vector_store.collection_name
+        embedding_model = "all-MiniLM-L6-v2 (384-dimensional dense vectors)"
+        db_connected = True
 
-    m1, m2, m3, m4 = st.columns(4)
-    with m1:
-        st.metric("Total Indexed PDFs", total_indexed_sources)
-    with m2:
-        st.metric("Total Vector Chunks", total_chunks)
-    with m3:
-        st.metric("Collection Name", collection_name)
-    with m4:
-        st.metric("Database Status", "🟢 Connected" if db_connected else "🔴 Offline")
+        m1, m2, m3, m4 = st.columns(4)
+        with m1:
+            st.metric("Total Indexed PDFs", total_indexed_sources)
+        with m2:
+            st.metric("Total Vector Chunks", total_chunks)
+        with m3:
+            st.metric("Collection Name", collection_name)
+        with m4:
+            st.metric("Database Status", "🟢 Connected" if db_connected else "🔴 Offline")
 
-    st.divider()
+        st.divider()
 
-    col_left, col_right = st.columns([1.5, 1], gap="large")
+        col_left, col_right = st.columns([1.5, 1], gap="large")
 
-    with col_left:
-        st.subheader("Persistent Vector Collection Inventory")
-        if not registry:
-            st.info("No documents are currently indexed in ChromaDB.")
-        else:
-            table_rows = []
-            for doc_id, doc in registry.items():
-                chunk_cnt = doc.get("chunk_count", 0)
-                share = (chunk_cnt / total_chunks * 100) if total_chunks > 0 else 0
-                table_rows.append({
-                    "Document ID": doc_id,
-                    "Filename": doc.get("filename", "Unknown"),
-                    "Chunks": chunk_cnt,
-                    "Collection Share": f"{share:.1f}%",
-                    "Status": doc.get("status", "Indexed")
-                })
-            st.dataframe(table_rows, use_container_width=True, hide_index=True)
+        with col_left:
+            st.subheader("Persistent Vector Collection Inventory")
+            if not registry:
+                st.info("No documents are currently indexed in ChromaDB.")
+            else:
+                table_rows = []
+                for doc_id, doc in registry.items():
+                    chunk_cnt = doc.get("chunk_count", 0)
+                    share = (chunk_cnt / total_chunks * 100) if total_chunks > 0 else 0
+                    table_rows.append({
+                        "Document ID": doc_id,
+                        "Filename": doc.get("filename", "Unknown"),
+                        "Chunks": chunk_cnt,
+                        "Collection Share": f"{share:.1f}%",
+                        "Status": doc.get("status", "Indexed")
+                    })
+                st.dataframe(table_rows, use_container_width=True, hide_index=True)
 
-    with col_right:
-        st.subheader("System Infrastructure")
-        st.markdown(f"""
-        <div class="arch-card">
-            <div class="arch-label">RUNTIME SPECIFICATIONS</div>
-            <p style="margin-top: 0.8rem; line-height: 1.8;">
-                <strong>Vector DB:</strong> ChromaDB Persistent<br>
-                <strong>Storage Path:</strong> <code>data/chroma_db</code><br>
-                <strong>Documents Path:</strong> <code>data/documents</code><br>
-                <strong>Distance Metric:</strong> Cosine Similarity (1 - distance)<br>
-                <strong>Embedding Model:</strong> <code>{embedding_model}</code><br>
-                <strong>Synthesis Model:</strong> <code>{active_llm_name}</code><br>
-                <strong>Chunk Geometry:</strong> 500 chars (100 char overlap)
+        with col_right:
+            st.subheader("System Infrastructure")
+            st.markdown(f"""
+            <div class="arch-card">
+                <div class="arch-label">RUNTIME SPECIFICATIONS</div>
+                <p style="margin-top: 0.8rem; line-height: 1.8;">
+                    <strong>Vector DB:</strong> ChromaDB Persistent<br>
+                    <strong>Storage Path:</strong> <code>data/chroma_db</code><br>
+                    <strong>Documents Path:</strong> <code>data/documents</code><br>
+                    <strong>Distance Metric:</strong> Cosine Similarity (1 - distance)<br>
+                    <strong>Embedding Model:</strong> <code>{embedding_model}</code><br>
+                    <strong>Synthesis Model:</strong> <code>{active_llm_name}</code><br>
+                    <strong>Chunk Geometry:</strong> 500 chars (100 char overlap)
+                </p>
+            </div>
+            """, unsafe_allow_html=True)
+    else:
+        # Customer & Textile Specialist View: Product & Engineering Catalog
+        st.markdown("""
+        <div class="hero-box">
+            <div class="hero-content">
+                <span class="hero-eyebrow">LABHTEX INDUSTRIAL TEXTILES & FABRICS</span>
+                <h1>Industrial Lace Catalog & Technical Specifications</h1>
+                <p class="hero-p">
+                    Authoritative technical reference guide for fashion designers, garment manufacturers, and textile engineers.
+                    Explore classified lace constructions, fiber properties, and recommended garment placement standards.
+                </p>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        c1, c2, c3, c4 = st.columns(4)
+        with c1:
+            st.metric("Catalog Coverage", "10+ Lace Types", "Warp-Knit & Schiffli")
+        with c2:
+            st.metric("Testing Standards", "ISO & ASTM", "Burst, Seam, Shrinkage")
+        with c3:
+            st.metric("Garment Sectors", "Bridal & RTW", "Intimates & Couture")
+        with c4:
+            st.metric("AI Consultant", "🟢 Online 24/7", "Verified Citations")
+
+        st.divider()
+
+        st.markdown("""
+        <div style="margin: 0.5rem 0 1.2rem;">
+            <span class="hero-eyebrow">PRIMARY INDUSTRIAL CONSTRUCTIONS</span>
+            <h2 style="font-size: 1.5rem; margin-top: 0.2rem; color: #1b3527;">Core Lace Families & Production Profiles</h2>
+        </div>
+        """, unsafe_allow_html=True)
+
+        col_a, col_b = st.columns(2, gap="large")
+
+        with col_a:
+            st.markdown("""
+            <div class="arch-card" style="margin-bottom: 1.5rem;">
+                <div class="arch-label">WARP-KNIT / HIGH-EFFICIENCY</div>
+                <h3 style="color: #1b3527; font-size: 1.3rem; margin: 0.4rem 0 0.6rem;">Raschel & Jacquardtronic Laces</h3>
+                <p style="color: #4b544d; line-height: 1.6; font-size: 0.94rem;">
+                    Multi-bar warp-knitted textiles manufactured with high-speed pattern guide bars. Combines openwork mesh grounds with complex laid-in pattern yarns for superior dimensional stability and edge-fray resistance.
+                </p>
+                <div style="border-top: 1px solid #e2ddd0; margin-top: 12px; padding-top: 10px; font-size: 0.85rem; color: #354238;">
+                    <strong>Common Fibers:</strong> Polyamide 6.6, Textured Polyester<br>
+                    <strong>Best For:</strong> High-volume lingerie, camisoles, daywear trimming, athletic inserts
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+
+            st.markdown("""
+            <div class="arch-card">
+                <div class="arch-label">SCHIFFLI EMBROIDERED / HIGH RELIEF</div>
+                <h3 style="color: #1b3527; font-size: 1.3rem; margin: 0.4rem 0 0.6rem;">Chemical / Guipure Lace</h3>
+                <p style="color: #4b544d; line-height: 1.6; font-size: 0.94rem;">
+                    Intricate continuous embroidery stitched onto a sacrificial water-soluble or heat-dissolvable nonwoven substrate. Once the base is washed away, dense freestanding motifs remain without any background net.
+                </p>
+                <div style="border-top: 1px solid #e2ddd0; margin-top: 12px; padding-top: 10px; font-size: 0.85rem; color: #354238;">
+                    <strong>Common Fibers:</strong> 100% Cotton, Rayon Viscose, Spun Poly<br>
+                    <strong>Best For:</strong> Statement collar pieces, structured eveningwear bodices, luxury overlays
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+
+        with col_b:
+            st.markdown("""
+            <div class="arch-card" style="margin-bottom: 1.5rem;">
+                <div class="arch-label">TRADITIONAL TWIST-LOOM / COUTURE</div>
+                <h3 style="color: #1b3527; font-size: 1.3rem; margin: 0.4rem 0 0.6rem;">Leavers & Chantilly Laces</h3>
+                <p style="color: #4b544d; line-height: 1.6; font-size: 0.94rem;">
+                    Manufactured on historic Leavers twist looms using thousands of independent brass bobbins. Renowned for fluid drape, organic botanical floral motifs, and delicate signature eyelash fringe along scalloped borders.
+                </p>
+                <div style="border-top: 1px solid #e2ddd0; margin-top: 12px; padding-top: 10px; font-size: 0.85rem; color: #354238;">
+                    <strong>Common Fibers:</strong> Fine Combed Cotton, Pure Silk, Micro-Polyamide<br>
+                    <strong>Best For:</strong> Luxury bridal gowns, couture eveningwear, heirloom bridal veils
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+
+            st.markdown("""
+            <div class="arch-card">
+                <div class="arch-label">ELASTOMERIC COMPOSITE / TECHNICAL</div>
+                <h3 style="color: #1b3527; font-size: 1.3rem; margin: 0.4rem 0 0.6rem;">High-Performance Stretch Laces</h3>
+                <p style="color: #4b544d; line-height: 1.6; font-size: 0.94rem;">
+                    Engineered composite laces incorporating bare or air-entangled elastane (Spandex/Lycra) inlaid into the ground. Provides 40%+ bidirectional elongation with full elastic recovery under laundering cycles.
+                </p>
+                <div style="border-top: 1px solid #e2ddd0; margin-top: 12px; padding-top: 10px; font-size: 0.85rem; color: #354238;">
+                    <strong>Common Fibers:</strong> 85-90% Polyamide + 10-15% Spandex/Elastane<br>
+                    <strong>Best For:</strong> Contour bras, seamless shapewear, athleisure waistbands, bodycon eveningwear
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+
+        st.markdown("<div style='height: 1.5rem;'></div>", unsafe_allow_html=True)
+
+        # Bottom Interactive Callout
+        st.markdown("""
+        <div style="background: linear-gradient(135deg, #1b3527 0%, #294c39 100%); border-radius: 14px; padding: 22px 26px; color: #ffffff; box-shadow: 0 4px 18px rgba(27, 53, 39, 0.12);">
+            <div style="font-family: 'DM Mono', monospace; font-size: 0.68rem; letter-spacing: 0.14em; color: #9fe2b5; text-transform: uppercase;">INTERACTIVE TECHNICAL ASSISTANCE</div>
+            <h3 style="color: #ffffff; margin: 0.3rem 0 0.5rem; font-size: 1.25rem;">Need specific yarn counts, burst strength metrics, or garment placement rules?</h3>
+            <p style="color: #d1ead8; margin: 0; font-size: 0.92rem; line-height: 1.6;">
+                Our AI Specialist is trained on comprehensive LabhTex technical manuals, ASTM/ISO testing protocols, and garment engineering guides.
             </p>
         </div>
         """, unsafe_allow_html=True)
