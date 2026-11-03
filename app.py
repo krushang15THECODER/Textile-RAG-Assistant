@@ -1000,7 +1000,7 @@ def display_clean_error(title: str, error_msg: Any):
 def render_auth_portal(client: APIClient):
     st.markdown("""
     <div class="hero-box" style="text-align: center; margin: 2rem auto; max-width: 580px;">
-        <span class="hero-eyebrow">LABHTEX TEXTILE INTELLIGENCE & LACES EXPERT</span>
+        <span class="hero-eyebrow">ENTERPRISE SECURITY & KNOWLEDGE ARCHIVE</span>
         <h1 style="font-size: 2.2rem; margin-top: 0.3rem;">LabhTex Intelligence<span>.</span></h1>
         <p class="hero-p" style="margin: 0 auto; max-width: 460px;">
             Authenticated access for textile engineers, fabric consultants, and authorized quality auditors.
@@ -1129,7 +1129,7 @@ with st.sidebar:
     # Conversation Archive (Persistent in MongoDB Atlas)
     st.markdown("<div style='font-family:DM Mono,monospace;font-size:0.68rem;letter-spacing:0.12em;color:#b8ccb6;margin-bottom:6px;text-transform:uppercase;'>CONVERSATIONS</div>", unsafe_allow_html=True)
 
-    if st.button("➕ New Query / Chat", use_container_width=True):
+    if st.button("➕ New Technical Inquiry", use_container_width=True):
         st.session_state.current_conv_id = None
         st.session_state.messages = []
         st.rerun()
@@ -1467,14 +1467,14 @@ elif page == "Knowledge Base":
                         st.rerun()
 
 elif page == "AI Assistant":
-    st.markdown("<div class='hero-eyebrow'>AI TEXTILE & LACE SPECIALIST</div>", unsafe_allow_html=True)
+    st.markdown("<div class='hero-eyebrow'>CONVERSATIONAL CONSULTANT</div>", unsafe_allow_html=True)
     header_col, action_col = st.columns([4, 1])
     with header_col:
-        st.title("Ask your query about laces.")
+        st.title("Ask the archive.")
         if st.session_state.is_admin:
-            st.caption("Administrator Mode · Accurate textile specifications backed by verified document citations.")
+            st.caption("Administrator Consultation Mode · Answers synthesized strictly from retrieved document evidence.")
         else:
-            st.caption("Customer Portal · Get instant, accurate answers about lace types, fabric properties, and manufacturing.")
+            st.caption("Customer Portal · Queries answered strictly from the approved technical textile knowledge base.")
     with action_col:
         if st.session_state.messages:
             if st.button("Clear Chat", use_container_width=True):
@@ -1488,12 +1488,12 @@ elif page == "AI Assistant":
             st.warning("⚠️ Knowledge base is currently updating. Please check back shortly.")
 
     if not st.session_state.messages and vector_store.count() > 0:
-        st.markdown("<div style='font-family:DM Mono,monospace;font-size:0.72rem;letter-spacing:0.12em;color:var(--rust);margin:1.5rem 0 0.6rem;text-transform:uppercase;'>COMMONLY ASKED QUESTIONS ABOUT LACES & FABRICS</div>", unsafe_allow_html=True)
+        st.markdown("<div style='font-family:DM Mono,monospace;font-size:0.72rem;letter-spacing:0.12em;color:var(--rust);margin:1.5rem 0 0.6rem;text-transform:uppercase;'>TRY AN EXAMPLE TECHNICAL QUERY</div>", unsafe_allow_html=True)
         q_cols = st.columns(3)
         sample_prompts = [
-            "What are the main types of laces and their applications in garments?",
-            "What is the difference between Raschel lace and Leavers lace?",
-            "What are the key technical standards and testing requirements for stretch laces?"
+            "What is the standard pneumatic burst strength test parameter for lace under ISO 13938-2?",
+            "What are the kinematic differences between Leavers twist looms and Karl Mayer Raschel lace machines?",
+            "What are the critical temperature limits and degradation risks for elastane during heat-setting?"
         ]
         for idx, col in enumerate(q_cols):
             with col:
@@ -1521,7 +1521,7 @@ elif page == "AI Assistant":
                         st.text(c.get("text", ""))
                         st.divider()
 
-    prompt = st.chat_input("Ask your query about laces, fabrics, yarn specs, or garment usage...")
+    prompt = st.chat_input("Ask a technical question about indexed textile documentation...")
     if "submitted_prompt" in st.session_state:
         prompt = st.session_state.pop("submitted_prompt")
 
@@ -1538,7 +1538,7 @@ elif page == "AI Assistant":
             st.markdown(prompt)
 
         with st.chat_message("assistant"):
-            with st.spinner("Searching lace knowledge base and generating answer..."):
+            with st.spinner("Synthesizing technical response from approved archive..."):
                 active_key = (
                     st.session_state.get("llm_api_key")
                     or os.getenv("OPENROUTER_API_KEY")
