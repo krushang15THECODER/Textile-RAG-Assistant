@@ -813,6 +813,56 @@ html, body, [data-testid="stAppViewContainer"], [data-testid="stMain"], .main, s
     margin: 8px 0 !important;
 }
 
+/* ==============================================================================
+   Callout Banner Styling (100% Contrast & Legibility on Dark Themes)
+   ============================================================================== */
+.callout-banner {
+    background: linear-gradient(135deg, #1b3527 0%, #294c39 100%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.16) !important;
+    border-radius: 14px !important;
+    padding: 24px 28px !important;
+    box-shadow: 0 4px 18px rgba(27, 53, 39, 0.15) !important;
+    color: #ffffff !important;
+}
+
+.callout-banner,
+.callout-banner * {
+    color: #ffffff !important;
+}
+
+.callout-banner .banner-eyebrow {
+    font-family: 'DM Mono', monospace !important;
+    font-size: 0.70rem !important;
+    letter-spacing: 0.16em !important;
+    color: #9fe2b5 !important;
+    text-transform: uppercase !important;
+    font-weight: 600 !important;
+    margin-bottom: 0.45rem !important;
+}
+
+.callout-banner .callout-heading {
+    font-family: 'Playfair Display', Georgia, serif !important;
+    font-size: 1.35rem !important;
+    font-weight: 600 !important;
+    color: #ffffff !important;
+    margin: 0.35rem 0 0.55rem !important;
+    line-height: 1.35 !important;
+    letter-spacing: -0.01em !important;
+}
+
+.callout-banner .banner-sub {
+    font-family: 'DM Sans', -apple-system, sans-serif !important;
+    color: #e2f1e6 !important;
+    margin: 0 !important;
+    font-size: 0.94rem !important;
+    line-height: 1.65 !important;
+}
+
+.callout-banner a {
+    color: #9fe2b5 !important;
+    text-decoration: underline !important;
+}
+
 </style>
 """, unsafe_allow_html=True)
 
@@ -1393,10 +1443,10 @@ if page == "Overview":
 
         # Bottom Interactive Callout
         st.markdown("""
-        <div style="background: linear-gradient(135deg, #1b3527 0%, #294c39 100%); border-radius: 14px; padding: 22px 26px; color: #ffffff; box-shadow: 0 4px 18px rgba(27, 53, 39, 0.12);">
-            <div style="font-family: 'DM Mono', monospace; font-size: 0.68rem; letter-spacing: 0.14em; color: #9fe2b5; text-transform: uppercase;">INTERACTIVE TECHNICAL ASSISTANCE</div>
-            <h3 style="color: #ffffff; margin: 0.3rem 0 0.5rem; font-size: 1.25rem;">Need specific yarn counts, burst strength metrics, or garment placement rules?</h3>
-            <p style="color: #d1ead8; margin: 0; font-size: 0.92rem; line-height: 1.6;">
+        <div class="callout-banner">
+            <div class="banner-eyebrow">INTERACTIVE TECHNICAL ASSISTANCE</div>
+            <div class="callout-heading">Need specific yarn counts, burst strength metrics, or garment placement rules?</div>
+            <p class="banner-sub">
                 Our AI Specialist is trained on comprehensive LabhTex technical manuals, ASTM/ISO testing protocols, and garment engineering guides.
             </p>
         </div>
