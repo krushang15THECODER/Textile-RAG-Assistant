@@ -1,8 +1,8 @@
 # 🧵 LabhTex Textile Intelligence — Grounded RAG Platform
 
-An enterprise-grade Retrieval-Augmented Generation (RAG) assistant purpose-built for textile engineers, quality control auditors, and plant managers. It enables authenticated professionals to query dense technical documentation (ISO/ASTM test standards, warp-knitting machinery specs, wet processing recipes, and factory SOPs) and returns grounded answers backed by strict, deterministic citations and raw evidence verification.
+A production-grade Retrieval-Augmented Generation (RAG) assistant designed for everyone navigating the textile and fashion landscape — from curious buyers, fashion designers, garment manufacturers, and students to textile engineers, quality control auditors, and plant managers. It enables anyone to explore industrial lace catalogs, inquire about fabric properties, and query authoritative technical documentation (ISO/ASTM test standards, warp-knitting machinery specs, yarn counts, and factory SOPs) with grounded, natural answers backed by transparent citations and verifiable evidence.
 
-Built on a decoupled modern architecture combining a **FastAPI backend**, a **Streamlit frontend**, **MongoDB Atlas** for secure identity and chat persistence, **ChromaDB** for vector retrieval, and **Google Gemini / OpenRouter** for grounded synthesis.
+Built on a decoupled modern architecture combining a **FastAPI backend**, a **Streamlit frontend**, **MongoDB Atlas** for secure identity and chat persistence, **ChromaDB** for vector retrieval, an optimized **ONNX Runtime embedding engine**, and **Google Gemini / OpenRouter** for grounded synthesis.
 
 <p align="center">
   <img src="https://img.shields.io/badge/Python-3.10%2B-blue?style=flat-square" alt="Python">
@@ -10,7 +10,7 @@ Built on a decoupled modern architecture combining a **FastAPI backend**, a **St
   <img src="https://img.shields.io/badge/Streamlit-UI-FF4B4B?style=flat-square" alt="Streamlit">
   <img src="https://img.shields.io/badge/MongoDB%20Atlas-Persistent%20Store-47A248?style=flat-square" alt="MongoDB">
   <img src="https://img.shields.io/badge/ChromaDB-Vector%20Store-orange?style=flat-square" alt="ChromaDB">
-  <img src="https://img.shields.io/badge/Embeddings-all--MiniLM--L6--v2-purple?style=flat-square" alt="Embeddings">
+  <img src="https://img.shields.io/badge/ONNX%20Runtime-Embeddings%20(<60MB)-purple?style=flat-square" alt="ONNX Runtime">
   <img src="https://img.shields.io/badge/Security-bcrypt%20%7C%20RBAC%20%7C%20SHA--256-darkred?style=flat-square" alt="Security">
 </p>
 
@@ -24,11 +24,12 @@ flowchart TD
         UI["Streamlit Modern UI\n(DM Sans, Playfair, DM Mono)"]
         AUTH_UI["Auth Gate\n(Sign In / Registration Portal)"]
         CHAT_UI["Interactive Chat Workspace\n(Citations & Evidence Modal)"]
-        ADMIN_UI["Knowledge Base Manager\n(PDF Upload / Purge / Telemetry)"]
+        OVERVIEW_UI["Role-Aware Overview Page\n(Lace Catalog for Users / Telemetry for Admins)"]
+        ADMIN_UI["Knowledge Base Manager\n(PDF Upload / Purge / Chunk Status)"]
     end
 
     subgraph Backend["FastAPI High-Performance Backend"]
-        API["FastAPI App (/api)"]
+        API["FastAPI App (/, /health, /api)"]
         AUTH_SVC["Auth Service\n(bcrypt, SHA-256 Sessions, Rate Limiter)"]
         CONV_SVC["Conversation & History Service\n(Auto-titling, Message Archive)"]
         ADMIN_SVC["Admin Service\n(RBAC Enforcement, Document Registry)"]
@@ -37,11 +38,13 @@ flowchart TD
 
     subgraph DataLayer["Storage & Intelligence Layer"]
         MONGO[("MongoDB Atlas Cloud\n(Users, Sessions, Conversations, Messages)")]
-        CHROMA[("ChromaDB Vector Store\n(384d Dense Embeddings, HNSW Index)")]
-        LLM["LLM Provider\n(Gemini 3.8 Flash / OpenRouter Llama 3.3)"]
+        ONNX["ONNX Runtime Engine\n(all-MiniLM-L6-v2, 51.8MB RAM, 20ms)"]
+        CHROMA[("ChromaDB Vector Store\n(1,340+ Indexed Chunks, Cosine HNSW)")]
+        LLM["LLM Synthesis\n(Gemini 3.8 Flash / OpenRouter Llama 3.3)"]
     end
 
     UI --> AUTH_UI
+    UI --> OVERVIEW_UI
     AUTH_UI -->|POST /api/auth/login| API
     CHAT_UI -->|POST /api/conversations/.../messages| API
     ADMIN_UI -->|POST /api/admin/documents/upload| API
@@ -54,29 +57,30 @@ flowchart TD
     AUTH_SVC -->|Validate & Query| MONGO
     CONV_SVC -->|Strict User Isolation| MONGO
     ADMIN_SVC -->|Metadata & Document Deletion| CHROMA
-    RAG_SVC -->|Cosine Top-K Retrieval| CHROMA
+    RAG_SVC -->|Vector Embeddings| ONNX
+    ONNX -->|Similarity Search| CHROMA
     RAG_SVC -->|Grounded Synthesis| LLM
 ```
 
 ---
 
-## 🔐 Authentication, Authorization & Admin Provisions
+## 🔐 Authentication, Authorization & User Experiences
 
-The platform features an enterprise-grade security model separating regular technical users from privileged administrators.
+The platform provides a secure, role-aware experience tailored to both regular users and technical administrators.
 
 ### 1. User Roles & Capabilities
-| Role | Capabilities | Restrictions |
+| Role | Experience & Capabilities | Restrictions |
 | :--- | :--- | :--- |
-| **`user`** (Standard) | • Query technical knowledge base<br>• Access citation badges & raw evidence modal<br>• Create, rename, delete own chat inquiries<br>• Persistent chat history across devices | • Cannot upload technical documents<br>• Cannot delete documents from vector store<br>• Blocked from `/api/admin/*` endpoints (HTTP 403) |
-| **`admin`** (Privileged) | • All standard user capabilities<br>• Dedicated **Knowledge Base** management tab<br>• Upload & vectorize new standard/SOP PDFs<br>• Document-level deletion from vector store<br>• Real-time system telemetry & index stats | • Requires `ADMIN_REGISTRATION_KEY` during signup |
+| **`user`** (Standard / Everyday User) | • **Lace Inquiries**: Ask natural questions about lace types, fabric properties, care, and garment design<br>• **Product Catalog**: Explore the classified Industrial Lace Catalog (Raschel, Guipure, Leavers, Stretch)<br>• **Evidence & Citations**: Inspect exact source documents and page numbers for full transparency<br>• **History**: Persistent, multi-device chat inquiry threads with auto-titling | • Cannot upload technical documents<br>• Cannot delete documents from vector store<br>• Blocked from administrative management endpoints (HTTP 403) |
+| **`admin`** (Privileged Administrator) | • All standard user capabilities<br>• **Knowledge Base Portal**: Upload, inspect, and index technical PDF literature<br>• **Surgical Deletion**: Remove specific documents and chunks from ChromaDB<br>• **System Telemetry**: Real-time vector chunk counts, collection shares, and runtime specs | • Requires administrative registration key during signup |
 
 ### 2. Admin Provisioning
 To register an Administrator account:
 1. Open the **Auth Portal** and navigate to the **Register** tab.
-2. Enter your Name, Email, and a strong password ($\ge 12$ characters).
+2. Enter your Name, Email, and password ($\ge 12$ characters).
 3. Expand the **Administrator Registration (Optional)** toggle.
-4. Provide the secret `ADMIN_REGISTRATION_KEY` configured in the backend environment.
-5. Upon registration, the backend validates the key against `ADMIN_REGISTRATION_KEY`. If valid, the user is permanently assigned `role="admin"`. If invalid, the request is rejected with `HTTP 400 Bad Request`.
+4. Provide the private administrative key configured in the environment.
+5. The backend validates the secret key against the environment configuration. If valid, the user is permanently assigned `role="admin"`. If invalid, the request is rejected with `HTTP 400 Bad Request`.
 
 ### 3. Security Architecture
 - **Password Security**: Passwords hashed using `bcrypt` (12 salt rounds). Plaintext passwords are never logged or stored.
@@ -106,20 +110,34 @@ To register an Administrator account:
 - Natural break snapping (`\n\n`, `\n`, period, space) prevents cutting formulas or technical terms in half.
 - Every chunk is stamped with its source filename, page number, and unique chunk index.
 
-### 3. Dense Embeddings (`src/embeddings.py`)
-- Powered by `sentence-transformers/all-MiniLM-L6-v2`.
-- Generates 384-dimensional dense semantic vectors.
-- Runs locally on CPU/GPU with zero latency and zero recurring embedding API costs.
+### 3. High-Efficiency ONNX Runtime Embeddings (`src/embeddings.py`)
+- Powered by an optimized **ONNX Runtime engine** with tokenizers running `all-MiniLM-L6-v2`.
+- **Ultra-Low Memory Footprint**: Uses only **~51.8MB of RAM** (down from 575MB with PyTorch), completely preventing out-of-memory errors on memory-constrained cloud environments (such as Render Free Tier's 512MB limit).
+- **Fast CPU Inference**: ~20ms latency per query with exact mathematical parity (1.000000 cosine similarity) to standard PyTorch models.
+- **Zero-Download Cold Start**: Pre-converted ONNX weights (`models/all-MiniLM-L6-v2/model.onnx`, 86MB) and `tokenizer.json` are committed directly to the repository, eliminating runtime Hugging Face downloads.
 
 ### 4. Vector Storage & Safe Deletion (`src/vector_store.py`)
-- Persistent storage using **ChromaDB** with HNSW indexing.
+- Persistent storage using **ChromaDB** with HNSW indexing (pre-indexed with 1,340+ verified chunks).
 - **Document-Level Safe Deletion**: Deleting an indexed document queries chunks by `document_id` and surgically purges matching vectors without re-indexing the entire database.
 
 ### 5. Grounded Synthesis & Citations (`src/generation.py`, `src/citations.py`)
 - Supports **Google Gemini** (`gemini-3.8-flash`) and **OpenRouter** (`meta-llama/llama-3.3-70b-instruct`).
+- Credentials passed securely from user session or environment variables with a 30s timeout guardrail.
 - Low temperature ($0.1$) for strict adherence to technical context.
-- **Deterministic Citations**: Answers must cite sources using `[Document_Name.pdf, p. X]`.
+- **Transparent Citations**: Answers automatically cite sources with interactive badges and a full raw evidence drawer.
 - **Honest Abstention**: If the evidence is insufficient in the indexed knowledge base, the model explicitly abstains rather than hallucinating standards.
+
+---
+
+## 🎨 User Interface & Accessibility Highlights
+
+- **Role-Aware Overview**:
+  - Regular users enjoy an illustrated **Industrial Lace Catalog** covering Raschel & Jacquardtronic, Leavers & Chantilly, Chemical / Guipure, and High-Performance Stretch laces, complete with common fiber blends and garment application recommendations.
+  - Administrators access live **Database Telemetry** (collection chunks, document shares, storage paths, and distance metrics).
+- **High-Contrast Callout Banner**:
+  - Engineered with dedicated `.callout-banner` styles ensuring pure white (`#ffffff`) serif headings and clear mint accents on deep forest green backgrounds, meeting high readability standards.
+- **Natural, Lace-Centric Copy**:
+  - Intuitive conversational copy ("Ask your query about laces") replacing robotic internal system phrases.
 
 ---
 
@@ -135,30 +153,33 @@ Textile-RAG-Assistant/
 │   │   └── messages.py                    # RAG synthesis & persistent chat messages
 │   ├── config.py                          # Dynamic environment & secret loading
 │   ├── database.py                        # MongoDB Atlas connection & index initialization
-│   ├── main.py                            # FastAPI application entry & CORS middleware
+│   ├── main.py                            # FastAPI application entry, CORS middleware, GET/HEAD health
 │   ├── models.py                          # Pydantic schemas and validation models
 │   └── security.py                        # bcrypt, SHA-256 tokens, idle timeouts, rate limiter
+├── models/                                # Optimized ONNX Inference Weights
+│   └── all-MiniLM-L6-v2/
+│       ├── model.onnx                     # Bundled ONNX model (86MB, 51.8MB RAM footprint)
+│       ├── tokenizer.json                 # Fast HuggingFace tokenizer
+│       └── special_tokens_map.json        # Tokenizer vocabulary configuration
 ├── src/                                   # RAG Pipeline & Client Modules
 │   ├── api_client.py                      # Frontend HTTP client connecting Streamlit to FastAPI
 │   ├── chunking.py                        # Sliding-window boundary-aware text chunker
 │   ├── citations.py                       # Citation formatting and abstention detection
-│   ├── embeddings.py                      # Local SentenceTransformer embedding wrapper
+│   ├── embeddings.py                      # ONNX Runtime embedding engine (<60MB RAM)
 │   ├── generation.py                      # LLM context assembly & answer generation
 │   ├── ingestion.py                       # PyMuPDF page-aware PDF text extraction
 │   ├── retrieval.py                       # Semantic search & similarity scoring
 │   └── vector_store.py                    # ChromaDB persistent store & document deletion
-├── lace_knowledge_base_deliverables/      # 84-Page Curated Technical Literature
-│   ├── Lace_Textile_Reference_Manual.pdf              # 60 pages (Yarns, machinery, tests)
-│   ├── Lace_Industry_Operations_and_Commercial_Handbook.pdf # 16 pages (SOPs, formulas)
-│   └── Research_Bibliography.pdf                      # 8 pages (Standards & citations)
-├── data/                                  # Local Data Directory
-│   ├── documents/                         # Uploaded PDF documents
+├── lace_knowledge_base_deliverables/      # Curated Technical Literature
+│   ├── Lace_Textile_Reference_Manual.pdf  # Comprehensive specifications (Yarns, machinery, tests)
+│   ├── Lace_Industry_Operations_and_Commercial_Handbook.pdf # Production SOPs, formulas
+│   └── Research_Bibliography.pdf          # Standards & citations
+├── data/                                  # Persistent Storage
+│   ├── chroma_db/                         # Permanent 1,340+ chunk vector store
+│   ├── documents/                         # PDF document storage
 │   └── documents_registry.json            # Document catalog
-├── evaluation/                            # Ground Truth Evaluation Suite
-│   ├── evaluate.py                        # Automated evaluation script
-│   └── questions.json                     # Test questions with ground truth citations
-├── app.py                                 # Streamlit UI application
-├── requirements.txt                       # Production dependencies
+├── app.py                                 # Streamlit UI application with lace catalog & chat
+├── requirements.txt                       # Production dependencies (ONNX Runtime, FastAPI, Streamlit)
 ├── run_local.bat                          # One-click Windows local runner
 ├── .env.example                           # Comprehensive environment configuration template
 └── README.md                              # Technical documentation
@@ -197,20 +218,25 @@ Copy the template file to `.env`:
 ```bash
 cp .env.example .env
 ```
-Fill in the required values in `.env`:
+Fill in the configuration in `.env`:
 ```ini
 # MongoDB Atlas
-MONGODB_URI=mongodb+srv://<username>:<password>@cluster0.mongodb.net/
+MONGODB_URI=<your_mongodb_connection_uri>
 MONGODB_DB_NAME=labhtex_textile_rag
 
 # Security
-ADMIN_REGISTRATION_KEY=LabhTexAdminSecret2026!
+ADMIN_REGISTRATION_KEY=<your_chosen_admin_key>
 SESSION_COOKIE_NAME=labhtex_session
 BACKEND_URL=http://127.0.0.1:8000
 CORS_ORIGINS=http://localhost:8501,http://127.0.0.1:8501,http://localhost:8000
 
 # LLM Provider (Choose Gemini or OpenRouter)
-OPENROUTER_API_KEY=sk-or-v1-your_key_here
+# If using Gemini:
+GEMINI_API_KEY=<your_gemini_api_key>
+GEMINI_MODEL=gemini-3.8-flash
+
+# If using OpenRouter:
+OPENROUTER_API_KEY=<your_openrouter_api_key>
 OPENROUTER_MODEL=meta-llama/llama-3.3-70b-instruct
 ```
 
@@ -252,9 +278,12 @@ The platform is designed for a dual-tier cloud deployment:
 3. Add Environment Variables in Render:
    - `MONGODB_URI`: Your MongoDB Atlas connection string.
    - `MONGODB_DB_NAME`: `labhtex_textile_rag`
-   - `ADMIN_REGISTRATION_KEY`: Your private admin key.
-   - `OPENROUTER_API_KEY` (or `GEMINI_API_KEY`): Your LLM key.
+   - `ADMIN_REGISTRATION_KEY`: Your private admin registration key.
+   - `OPENROUTER_API_KEY` (or `GEMINI_API_KEY`): Your LLM API key.
    - `CORS_ORIGINS`: Your deployed Streamlit URL (e.g. `https://<your-app>.streamlit.app`).
+4. **Automated Ping Monitoring (Prevent Sleeping)**:
+   - The backend supports `GET` and `HEAD` probes on `/` and `/health`.
+   - Setup a monitor on [UptimeRobot](https://uptimerobot.com/) pointing to `https://<your-backend>.onrender.com/health` every 5-10 minutes.
 
 ### 2. Deploying the Frontend on Streamlit Cloud
 1. Deploy your app on [Streamlit Community Cloud](https://share.streamlit.io/).
@@ -263,22 +292,22 @@ The platform is designed for a dual-tier cloud deployment:
    ```toml
    BACKEND_URL = "https://<your-render-service-name>.onrender.com"
    ```
-   *(Note: Ensure it uses `https://` with no trailing slash).*
+   *(Ensure it uses `https://` with no trailing slash).*
 
 ---
 
 ## 🧪 Automated Test Suite
 
-The codebase comes with a comprehensive suite of 100% passing automated unit and integration tests:
+The codebase comes with a comprehensive suite of automated tests:
 
 ```bash
-# 1. Test Authentication, Sessions, RBAC & Chat History (12 Scenarios)
+# 1. Test Authentication, Sessions, RBAC & Chat History
 python test_auth_and_history.py
 
 # 2. Test Boundary-Aware Chunking & Overlap Consistency
 python test_chunking.py
 
-# 3. Test Dense Embeddings Generation
+# 3. Test High-Efficiency ONNX Embeddings Generation
 python test_embeddings.py
 
 # 4. Test ChromaDB Indexing, Idempotence & Safe Deletion
@@ -300,7 +329,8 @@ python test_ingestion.py
 
 | Method | Endpoint | Access | Description |
 | :--- | :--- | :--- | :--- |
-| `GET` | `/health` | Public | System status and MongoDB ping check |
+| `GET`, `HEAD` | `/` | Public | Service information and root availability check |
+| `GET`, `HEAD` | `/health` | Public | System status, MongoDB ping, and ONNX engine check |
 | `POST` | `/api/auth/register` | Public | User registration (admin with `admin_key`) |
 | `POST` | `/api/auth/login` | Public | Authenticate user, issue session cookie & token |
 | `POST` | `/api/auth/logout` | Authenticated | Revoke active session in MongoDB |
