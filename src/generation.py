@@ -190,17 +190,24 @@ EXPERT RESPONSE:"""
         if provider == "openrouter":
             answer_text = generate_with_openrouter(prompt, api_key=key, model_name=target_model)
         else:
+            import concurrent.futures
             client = get_gemini_client(api_key=key)
-            response = client.models.generate_content(
-                model=target_model,
-                contents=prompt,
-                config={
-                    "system_instruction": SYSTEM_INSTRUCTION,
-                    "temperature": 0.1,
-                    "max_output_tokens": 1024,
-                }
-            )
-            answer_text = response.text if response and response.text else "No response generated."
+            with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+                future = executor.submit(
+                    client.models.generate_content,
+                    model=target_model,
+                    contents=prompt,
+                    config={
+                        "system_instruction": SYSTEM_INSTRUCTION,
+                        "temperature": 0.1,
+                        "max_output_tokens": 1024,
+                    }
+                )
+                try:
+                    response = future.result(timeout=30)
+                    answer_text = response.text if response and response.text else "No response generated."
+                except concurrent.futures.TimeoutError:
+                    raise RuntimeError("Gemini API call timed out after 30 seconds. Please check API quota or switch to OpenRouter.")
 
         # Clean any accidental inline bracketed filenames (e.g., "[manual.pdf, Page 3]")
         answer_text = re.sub(r'\s*\[[^\]]*\.(?:pdf|docx|txt|xlsx)[^\]]*\]', '', answer_text).strip()

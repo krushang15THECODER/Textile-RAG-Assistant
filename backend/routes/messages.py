@@ -121,12 +121,21 @@ async def post_message_and_generate_response(
         from src.generation import generate_answer
         from src.retrieval import retrieve_context
 
+        print(f"[RAG] Executing retrieval for: {req.content[:60]}...")
         retrieved_chunks = retrieve_context(req.content, top_k=4)
-        rag_result = generate_answer(query=req.content, retrieved_chunks=retrieved_chunks)
+        print(f"[RAG] Retrieval finished ({len(retrieved_chunks)} chunks). Generating answer...")
+        rag_result = generate_answer(
+            query=req.content,
+            retrieved_chunks=retrieved_chunks,
+            model_name=req.model,
+            api_key=req.api_key
+        )
+        print("[RAG] Answer generation finished.")
         answer_text = rag_result.get("answer", "No response generated.")
         citations = rag_result.get("citations", [])
         citations_md = format_citations_markdown(citations) if citations else ""
     except Exception as rag_err:
+        print(f"[RAG ERROR] Pipeline exception: {rag_err}")
         answer_text = f"An error occurred while generating the technical response: {rag_err}"
         citations = []
         citations_md = ""

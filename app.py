@@ -1539,7 +1539,28 @@ elif page == "AI Assistant":
 
         with st.chat_message("assistant"):
             with st.spinner("Synthesizing technical response from approved archive..."):
-                ok_resp, msg_data = api_client.send_message(curr_conv_id, prompt)
+                active_key = (
+                    st.session_state.get("llm_api_key")
+                    or os.getenv("OPENROUTER_API_KEY")
+                    or os.getenv("GEMINI_API_KEY")
+                )
+                active_prov = (
+                    "openrouter"
+                    if (active_key and str(active_key).startswith("sk-or-"))
+                    else os.getenv("LLM_PROVIDER")
+                )
+                active_mod = (
+                    os.getenv("OPENROUTER_MODEL")
+                    if active_prov == "openrouter"
+                    else os.getenv("GEMINI_MODEL")
+                )
+                ok_resp, msg_data = api_client.send_message(
+                    curr_conv_id,
+                    prompt,
+                    api_key=active_key,
+                    provider=active_prov,
+                    model=active_mod
+                )
 
             if ok_resp:
                 # Reload messages directly from MongoDB

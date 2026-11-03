@@ -75,7 +75,7 @@ async def root():
     return {
         "status": "online",
         "service": "LabhTex Textile Intelligence Backend",
-        "version": "2.3.0",
+        "version": "2.5.0",
         "documentation": "/docs",
         "health": "/health"
     }
@@ -93,10 +93,13 @@ async def health_check():
 
     import sys
     import ssl
+    from pathlib import Path
+    onnx_present = (Path("models") / "all-MiniLM-L6-v2" / "model.onnx").exists()
     return {
         "status": "online",
         "service": "LabhTex Textile Intelligence Backend",
-        "version": "2.3.0",
+        "version": "2.5.0",
+        "onnx_ready": onnx_present,
         "python": sys.version.split()[0],
         "openssl": ssl.OPENSSL_VERSION,
         "database": db_status

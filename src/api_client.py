@@ -189,10 +189,25 @@ class APIClient:
         except Exception:
             return False, []
 
-    def send_message(self, conv_id: str, content: str) -> Tuple[bool, Any]:
+    def send_message(
+        self,
+        conv_id: str,
+        content: str,
+        api_key: Optional[str] = None,
+        provider: Optional[str] = None,
+        model: Optional[str] = None
+    ) -> Tuple[bool, Any]:
         url = f"{self.base_url}/api/conversations/{conv_id}/messages"
+        payload = {"content": content}
+        if api_key:
+            payload["api_key"] = api_key
+        if provider:
+            payload["provider"] = provider
+        if model:
+            payload["model"] = model
+
         try:
-            resp = self.session.post(url, json={"content": content}, headers=self._get_headers(), cookies=self._get_cookies(), timeout=120)
+            resp = self.session.post(url, json=payload, headers=self._get_headers(), cookies=self._get_cookies(), timeout=120)
             if resp.status_code == 200:
                 return True, resp.json()
             return False, self._parse_error(resp)

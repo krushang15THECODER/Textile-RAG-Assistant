@@ -41,6 +41,9 @@ class ConversationResponse(BaseModel):
 
 class MessageCreateRequest(BaseModel):
     content: str = Field(..., min_length=1, max_length=4000)
+    api_key: Optional[str] = None
+    provider: Optional[str] = None
+    model: Optional[str] = None
 
 class MessageResponse(BaseModel):
     id: str
