@@ -6,7 +6,10 @@ load_dotenv(override=True)
 
 def get_mongodb_uri() -> str:
     load_dotenv(override=True)
-    return os.getenv("MONGODB_URI", "").strip()
+    val = os.getenv("MONGODB_URI", "").strip()
+    if (val.startswith('"') and val.endswith('"')) or (val.startswith("'") and val.endswith("'")):
+        val = val[1:-1].strip()
+    return val
 
 def get_mongodb_db_name() -> str:
     load_dotenv(override=True)
