@@ -314,8 +314,3 @@ python test_ingestion.py
 | `GET` | `/api/admin/documents` | Admin Only | List all indexed PDFs & vector telemetry |
 | `POST` | `/api/admin/documents/upload` | Admin Only | Ingest, chunk, and embed a new PDF |
 | `DELETE`| `/api/admin/documents/{id}` | Admin Only | Surgical deletion of document vectors |
-
----
-
-## 📄 License
-This project is licensed under the Apache 2.0 License. Built for rigorous textile engineering and compliance assurance.
