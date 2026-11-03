@@ -28,11 +28,20 @@ def get_client() -> pymongo.MongoClient:
         )
 
     try:
-        _mongo_client = pymongo.MongoClient(
-            uri,
-            serverSelectionTimeoutMS=4000,
-            connectTimeoutMS=4000
-        )
+        import certifi
+        ca_file = certifi.where()
+    except Exception:
+        ca_file = None
+
+    try:
+        client_kwargs = {
+            "serverSelectionTimeoutMS": 5000,
+            "connectTimeoutMS": 5000
+        }
+        if ca_file:
+            client_kwargs["tlsCAFile"] = ca_file
+
+        _mongo_client = pymongo.MongoClient(uri, **client_kwargs)
         # Test connection ping
         _mongo_client.admin.command("ping")
         return _mongo_client
