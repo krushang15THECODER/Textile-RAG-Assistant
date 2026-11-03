@@ -8,9 +8,6 @@ from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
 
 from backend.models import DocumentItemResponse
 from backend.security import require_admin
-from src.chunking import chunk_pages
-from src.ingestion import extract_text_from_bytes
-from src.vector_store import get_vector_store
 
 router = APIRouter(prefix="/api/admin", tags=["Admin Operations"])
 
@@ -75,6 +72,10 @@ async def upload_document(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="The uploaded PDF file is empty."
         )
+
+    from src.chunking import chunk_pages
+    from src.ingestion import extract_text_from_bytes
+    from src.vector_store import get_vector_store
 
     vs = get_vector_store()
     doc_id = f"doc_{hashlib.md5(file.filename.encode()).hexdigest()[:10]}"
@@ -152,6 +153,10 @@ async def delete_document(
     doc_info = registry[document_id]
     filename = doc_info.get("filename", "")
     file_path = doc_info.get("file_path", "")
+
+    from src.chunking import chunk_pages
+    from src.ingestion import extract_text_from_bytes
+    from src.vector_store import get_vector_store
 
     vs = get_vector_store()
     try:

@@ -6,9 +6,6 @@ from bson import ObjectId
 from backend.database import get_db
 from backend.models import MessageCreateRequest, MessageResponse
 from backend.security import get_current_user
-from src.citations import format_citations_markdown
-from src.generation import generate_answer
-from src.retrieval import retrieve_context
 
 router = APIRouter(prefix="/api/conversations", tags=["Messages"])
 
@@ -120,6 +117,10 @@ async def post_message_and_generate_response(
 
     # 3. Execute existing RAG pipeline
     try:
+        from src.citations import format_citations_markdown
+        from src.generation import generate_answer
+        from src.retrieval import retrieve_context
+
         retrieved_chunks = retrieve_context(req.content, top_k=4)
         rag_result = generate_answer(query=req.content, retrieved_chunks=retrieved_chunks)
         answer_text = rag_result.get("answer", "No response generated.")
