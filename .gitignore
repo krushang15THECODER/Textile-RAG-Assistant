@@ -15,9 +15,6 @@ __pycache__/
 !.env.example
 .streamlit/secrets.toml
 
-# Local Vector Databases
-data/chroma_db/
-
 # Test Vector Databases (Local tests only)
 data/test_chroma_db/
 data/test_retrieval_db/
