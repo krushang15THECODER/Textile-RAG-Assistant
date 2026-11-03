@@ -69,7 +69,7 @@ app.include_router(messages.router)
 app.include_router(admin.router)
 
 
-@app.get("/")
+@app.api_route("/", methods=["GET", "HEAD"])
 async def root():
     """Root endpoint welcoming visitors and providing navigation to documentation."""
     return {
@@ -81,7 +81,7 @@ async def root():
     }
 
 
-@app.get("/health")
+@app.api_route("/health", methods=["GET", "HEAD"])
 async def health_check():
     """Health check endpoint validating service and database connectivity."""
     db_status = "connected"
