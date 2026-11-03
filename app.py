@@ -977,11 +977,19 @@ if token_candidate and "user" not in st.session_state:
 def display_clean_error(title: str, error_msg: Any):
     """Present a clean, professional user alert with optional collapsible technical details."""
     raw = str(error_msg)
+    is_timeout = any(k in raw for k in (
+        "Read timed out", "HTTPSConnectionPool", "waking up from sleep", "timed out"
+    ))
     is_technical = any(k in raw for k in (
         "SSL handshake", "TLSV1_ALERT", "Traceback", "TopologyDescription",
         "configured timeouts", "AutoReconnect", "ServerDescription", "socketTimeoutMS"
     ))
-    if is_technical:
+    if is_timeout:
+        st.warning("⏳ **The cloud backend was waking up from sleep.** On Render's Free Tier, services spin down after inactivity. The backend is now awake — please click Send again to submit your question!")
+        with st.expander("🛠️ View Connection Diagnostic Details", expanded=False):
+            st.code(raw, language="text")
+            st.caption("Render Free Tier cold starts typically take 45–60 seconds on the first inquiry.")
+    elif is_technical:
         st.error(f"⚠️ **{title}**: Database service is temporarily unreachable.")
         with st.expander("🛠️ View Diagnostic Details", expanded=False):
             st.code(raw, language="text")

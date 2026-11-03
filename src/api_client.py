@@ -87,10 +87,12 @@ class APIClient:
             payload["admin_key"] = admin_key
 
         try:
-            resp = self.session.post(url, json=payload, timeout=20)
+            resp = self.session.post(url, json=payload, timeout=45)
             if resp.status_code == 201:
                 return True, resp.json()
             return False, self._parse_error(resp)
+        except requests.exceptions.Timeout:
+            return False, "Backend service took longer than expected to respond (waking up from sleep). Please retry."
         except requests.exceptions.ConnectionError:
             return False, f"Could not connect to backend at {self.base_url}. Please check if the backend service is running."
         except Exception as e:
@@ -102,12 +104,14 @@ class APIClient:
         url = f"{self.base_url}/api/auth/login"
         payload = {"email": email, "password": password}
         try:
-            resp = self.session.post(url, json=payload, timeout=25)
+            resp = self.session.post(url, json=payload, timeout=45)
             if resp.status_code == 200:
                 data = resp.json()
                 self.session_token = data.get("token")
                 return True, data
             return False, self._parse_error(resp)
+        except requests.exceptions.Timeout:
+            return False, "Backend service took longer than expected to respond (waking up from sleep). Please try logging in again."
         except requests.exceptions.ConnectionError:
             return False, f"Could not connect to backend at {self.base_url}. Please verify BACKEND_URL."
         except Exception as e:
@@ -116,7 +120,7 @@ class APIClient:
     def logout(self) -> Tuple[bool, str]:
         url = f"{self.base_url}/api/auth/logout"
         try:
-            resp = self.session.post(url, headers=self._get_headers(), cookies=self._get_cookies(), timeout=10)
+            resp = self.session.post(url, headers=self._get_headers(), cookies=self._get_cookies(), timeout=15)
             self.session_token = None
             if resp.status_code == 200:
                 return True, "Logged out successfully."
@@ -128,7 +132,7 @@ class APIClient:
     def get_me(self) -> Tuple[bool, Any]:
         url = f"{self.base_url}/api/auth/me"
         try:
-            resp = self.session.get(url, headers=self._get_headers(), cookies=self._get_cookies(), timeout=15)
+            resp = self.session.get(url, headers=self._get_headers(), cookies=self._get_cookies(), timeout=30)
             if resp.status_code == 200:
                 return True, resp.json()
             return False, self._parse_error(resp)
@@ -138,7 +142,7 @@ class APIClient:
     def list_conversations(self) -> Tuple[bool, List[Dict[str, Any]]]:
         url = f"{self.base_url}/api/conversations"
         try:
-            resp = self.session.get(url, headers=self._get_headers(), cookies=self._get_cookies(), timeout=15)
+            resp = self.session.get(url, headers=self._get_headers(), cookies=self._get_cookies(), timeout=30)
             if resp.status_code == 200:
                 return True, resp.json()
             return False, []
@@ -148,7 +152,7 @@ class APIClient:
     def create_conversation(self, title: str = "New Technical Inquiry") -> Tuple[bool, Any]:
         url = f"{self.base_url}/api/conversations"
         try:
-            resp = self.session.post(url, json={"title": title}, headers=self._get_headers(), cookies=self._get_cookies(), timeout=15)
+            resp = self.session.post(url, json={"title": title}, headers=self._get_headers(), cookies=self._get_cookies(), timeout=30)
             if resp.status_code == 201:
                 return True, resp.json()
             return False, self._parse_error(resp)
@@ -158,7 +162,7 @@ class APIClient:
     def rename_conversation(self, conv_id: str, new_title: str) -> Tuple[bool, Any]:
         url = f"{self.base_url}/api/conversations/{conv_id}"
         try:
-            resp = self.session.patch(url, json={"title": new_title}, headers=self._get_headers(), cookies=self._get_cookies(), timeout=15)
+            resp = self.session.patch(url, json={"title": new_title}, headers=self._get_headers(), cookies=self._get_cookies(), timeout=30)
             if resp.status_code == 200:
                 return True, resp.json()
             return False, self._parse_error(resp)
@@ -168,7 +172,7 @@ class APIClient:
     def delete_conversation(self, conv_id: str) -> Tuple[bool, str]:
         url = f"{self.base_url}/api/conversations/{conv_id}"
         try:
-            resp = self.session.delete(url, headers=self._get_headers(), cookies=self._get_cookies(), timeout=15)
+            resp = self.session.delete(url, headers=self._get_headers(), cookies=self._get_cookies(), timeout=30)
             if resp.status_code == 200:
                 return True, "Conversation deleted."
             return False, self._parse_error(resp)
@@ -178,7 +182,7 @@ class APIClient:
     def get_messages(self, conv_id: str) -> Tuple[bool, List[Dict[str, Any]]]:
         url = f"{self.base_url}/api/conversations/{conv_id}/messages"
         try:
-            resp = self.session.get(url, headers=self._get_headers(), cookies=self._get_cookies(), timeout=15)
+            resp = self.session.get(url, headers=self._get_headers(), cookies=self._get_cookies(), timeout=30)
             if resp.status_code == 200:
                 return True, resp.json()
             return False, []
@@ -188,17 +192,22 @@ class APIClient:
     def send_message(self, conv_id: str, content: str) -> Tuple[bool, Any]:
         url = f"{self.base_url}/api/conversations/{conv_id}/messages"
         try:
-            resp = self.session.post(url, json={"content": content}, headers=self._get_headers(), cookies=self._get_cookies(), timeout=60)
+            resp = self.session.post(url, json={"content": content}, headers=self._get_headers(), cookies=self._get_cookies(), timeout=120)
             if resp.status_code == 200:
                 return True, resp.json()
             return False, self._parse_error(resp)
+        except requests.exceptions.Timeout:
+            return False, (
+                "The cloud backend was waking up from sleep (Render Free Tier cold start). "
+                "The server is now awake — please click Send again to submit your question."
+            )
         except Exception as e:
             return False, str(e)
 
     def admin_list_documents(self) -> Tuple[bool, List[Dict[str, Any]]]:
         url = f"{self.base_url}/api/admin/documents"
         try:
-            resp = self.session.get(url, headers=self._get_headers(), cookies=self._get_cookies(), timeout=15)
+            resp = self.session.get(url, headers=self._get_headers(), cookies=self._get_cookies(), timeout=30)
             if resp.status_code == 200:
                 return True, resp.json()
             return False, []
@@ -209,17 +218,19 @@ class APIClient:
         url = f"{self.base_url}/api/admin/documents/upload"
         files = {"file": (filename, file_bytes, "application/pdf")}
         try:
-            resp = self.session.post(url, files=files, headers=self._get_headers(), cookies=self._get_cookies(), timeout=90)
+            resp = self.session.post(url, files=files, headers=self._get_headers(), cookies=self._get_cookies(), timeout=180)
             if resp.status_code == 201:
                 return True, resp.json()
             return False, self._parse_error(resp)
+        except requests.exceptions.Timeout:
+            return False, "Document indexing timed out on cloud host. Please try with a smaller document or retry shortly."
         except Exception as e:
             return False, str(e)
 
     def admin_delete_document(self, doc_id: str) -> Tuple[bool, str]:
         url = f"{self.base_url}/api/admin/documents/{doc_id}"
         try:
-            resp = self.session.delete(url, headers=self._get_headers(), cookies=self._get_cookies(), timeout=20)
+            resp = self.session.delete(url, headers=self._get_headers(), cookies=self._get_cookies(), timeout=30)
             if resp.status_code == 200:
                 return True, resp.json().get("message", "Document deleted.")
             return False, self._parse_error(resp)

@@ -69,6 +69,18 @@ app.include_router(messages.router)
 app.include_router(admin.router)
 
 
+@app.get("/")
+async def root():
+    """Root endpoint welcoming visitors and providing navigation to documentation."""
+    return {
+        "status": "online",
+        "service": "LabhTex Textile Intelligence Backend",
+        "version": "2.3.0",
+        "documentation": "/docs",
+        "health": "/health"
+    }
+
+
 @app.get("/health")
 async def health_check():
     """Health check endpoint validating service and database connectivity."""
