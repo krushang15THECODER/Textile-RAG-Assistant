@@ -296,8 +296,9 @@ The platform is designed for a dual-tier cloud deployment:
 3. In **App Settings** $\rightarrow$ **Secrets**, configure:
    ```toml
    BACKEND_URL = "https://<your-render-service-name>.onrender.com"
+   GEMINI_API_KEY = "AIzaSy..."
    ```
-   *(Ensure it uses `https://` with no trailing slash).*
+   *(Ensure `BACKEND_URL` uses `https://` with no trailing slash).*
 
 ---
 
