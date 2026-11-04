@@ -284,7 +284,10 @@ The platform is designed for a dual-tier cloud deployment:
    - `ADMIN_REGISTRATION_KEY`: Your private admin registration key (required for startup).
    - `COOKIE_SECURE`: `true`
    - `RETRIEVAL_SCORE_THRESHOLD`: `0.40`
-   - `OPENROUTER_API_KEY` (or `GEMINI_API_KEY`): Your LLM API key.
+   - `OPENROUTER_API_KEY`: Your OpenRouter API key (`sk-or-v1-...`).
+   - `OPENROUTER_MODEL`: `meta-llama/llama-3.3-70b-instruct`
+   - `LLM_PROVIDER`: `openrouter`
+   - *(Optional alternative)* `GEMINI_API_KEY` if using Google Gemini.
    - `CORS_ORIGINS`: Your deployed Streamlit URL (e.g. `https://<your-app>.streamlit.app`).
 4. **Automated Ping Monitoring (Prevent Sleeping)**:
    - The backend supports `GET` and `HEAD` probes on `/` and `/health`.
@@ -295,8 +298,18 @@ The platform is designed for a dual-tier cloud deployment:
 2. Set **Main file path**: `app.py`.
 3. In **App Settings** $\rightarrow$ **Secrets**, configure:
    ```toml
+   # Backend Connection (Required)
    BACKEND_URL = "https://<your-render-service-name>.onrender.com"
-   GEMINI_API_KEY = "AIzaSy..."
+
+   # OpenRouter LLM Configuration
+   OPENROUTER_API_KEY = "sk-or-v1-..."
+   OPENROUTER_MODEL = "meta-llama/llama-3.3-70b-instruct"
+   LLM_PROVIDER = "openrouter"
+
+   # (Or if using Google Gemini instead):
+   # GEMINI_API_KEY = "AIzaSy..."
+   # GEMINI_MODEL = "gemini-2.5-flash"
+   # LLM_PROVIDER = "gemini"
    ```
    *(Ensure `BACKEND_URL` uses `https://` with no trailing slash).*
 
