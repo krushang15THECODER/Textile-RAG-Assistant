@@ -13,14 +13,17 @@ from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from backend.config import CORS_ORIGINS
+from backend.config import CORS_ORIGINS, validate_config
 from backend.database import DatabaseUnavailableError, get_db, init_indexes
 from backend.routes import admin, auth, conversations, messages
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Initialize indexes if MongoDB is available
+    # 1. Validate security configuration on startup
+    validate_config()
+
+    # 2. Initialize indexes if MongoDB is available
     try:
         db = get_db()
         init_indexes(db)
@@ -35,16 +38,17 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="LabhTex Textile Intelligence API",
     description="Backend API for Authentication, Authorization, Persistent Chat, and Knowledge Base Management",
-    version="2.0.0",
+    version="2.5.0",
     lifespan=lifespan
 )
 
-# Strict CORS Middleware
+# CORS Middleware with explicit origins and Streamlit Cloud regex support
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=CORS_ORIGINS or ["http://localhost:8501"],
+    allow_origins=CORS_ORIGINS or ["http://localhost:8501", "http://127.0.0.1:8501"],
+    allow_origin_regex=r"^https://.*\.streamlit\.app$",
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
+    allow_methods=["GET", "POST", "PATCH", "DELETE", "OPTIONS", "HEAD"],
     allow_headers=["*"],
 )
 
@@ -77,17 +81,26 @@ async def root():
         "service": "LabhTex Textile Intelligence Backend",
         "version": "2.5.0",
         "documentation": "/docs",
-        "health": "/health"
+        "health": "/health",
+        "live": "/live"
     }
+
+
+@app.api_route("/live", methods=["GET", "HEAD"])
+async def liveness_probe():
+    """Liveness probe: returns 200 OK immediately if the web process is running."""
+    return {"status": "alive"}
 
 
 @app.api_route("/health", methods=["GET", "HEAD"])
 async def health_check():
-    """Health check endpoint validating service and database connectivity."""
+    """Readiness probe: validates database connectivity, ONNX runtime model, and runtime state."""
+    db_connected = False
     db_status = "connected"
     try:
         db = get_db()
         db.command("ping")
+        db_connected = True
     except Exception as e:
         db_status = f"unavailable: {e}"
 
@@ -95,10 +108,13 @@ async def health_check():
     import ssl
     from pathlib import Path
     onnx_present = (Path("models") / "all-MiniLM-L6-v2" / "model.onnx").exists()
+    is_ready = db_connected and onnx_present
+
     return {
-        "status": "online",
+        "status": "online" if is_ready else "degraded",
         "service": "LabhTex Textile Intelligence Backend",
         "version": "2.5.0",
+        "ready": is_ready,
         "onnx_ready": onnx_present,
         "python": sys.version.split()[0],
         "openssl": ssl.OPENSSL_VERSION,

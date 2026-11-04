@@ -2,7 +2,7 @@
 
 A production-grade Retrieval-Augmented Generation (RAG) assistant designed for everyone navigating the textile and fashion landscape — from curious buyers, fashion designers, garment manufacturers, and students to textile engineers, quality control auditors, and plant managers. It enables anyone to explore industrial lace catalogs, inquire about fabric properties, and query authoritative technical documentation (ISO/ASTM test standards, warp-knitting machinery specs, yarn counts, and factory SOPs) with grounded, natural answers backed by transparent citations and verifiable evidence.
 
-Built on a decoupled modern architecture combining a **FastAPI backend**, a **Streamlit frontend**, **MongoDB Atlas** for secure identity and chat persistence, **ChromaDB** for vector retrieval, an optimized **ONNX Runtime embedding engine**, and **Google Gemini / OpenRouter** for grounded synthesis.
+Built on a decoupled modern architecture combining a **FastAPI backend**, a **Streamlit frontend**, **MongoDB Atlas** for secure identity and chat persistence, **ChromaDB** for vector retrieval, an optimized **ONNX Runtime embedding engine**, conversational query rewriting for follow-ups, and **Google Gemini / OpenRouter** for grounded synthesis.
 
 <p align="center">
   <img src="https://img.shields.io/badge/Python-3.10%2B-blue?style=flat-square" alt="Python">
@@ -29,11 +29,12 @@ flowchart TD
     end
 
     subgraph Backend["FastAPI High-Performance Backend"]
-        API["FastAPI App (/, /health, /api)"]
+        API["FastAPI App (/, /live, /health, /api)"]
         AUTH_SVC["Auth Service\n(bcrypt, SHA-256 Sessions, Rate Limiter)"]
         CONV_SVC["Conversation & History Service\n(Auto-titling, Message Archive)"]
         ADMIN_SVC["Admin Service\n(RBAC Enforcement, Document Registry)"]
-        RAG_SVC["RAG Pipeline\n(Context Assembly & LLM Synthesis)"]
+        REWRITE_SVC["Query Rewriting & Disambiguation\n(Context-dependent Follow-ups)"]
+        RAG_SVC["RAG Pipeline & Relevance Gating\n(Threshold Filter & LLM Synthesis)"]
     end
 
     subgraph DataLayer["Storage & Intelligence Layer"]
@@ -52,50 +53,40 @@ flowchart TD
     API --> AUTH_SVC
     API --> CONV_SVC
     API --> ADMIN_SVC
-    API --> RAG_SVC
+    API --> REWRITE_SVC
+    REWRITE_SVC --> RAG_SVC
 
     AUTH_SVC -->|Validate & Query| MONGO
     CONV_SVC -->|Strict User Isolation| MONGO
     ADMIN_SVC -->|Metadata & Document Deletion| CHROMA
     RAG_SVC -->|Vector Embeddings| ONNX
-    ONNX -->|Similarity Search| CHROMA
+    ONNX -->|Cosine Similarity Search| CHROMA
     RAG_SVC -->|Grounded Synthesis| LLM
 ```
 
 ---
 
-## 🔐 Authentication, Authorization & User Experiences
+## 🔐 Authentication, Authorization & Security Configuration
 
-The platform provides a secure, role-aware experience tailored to both regular users and technical administrators.
+The platform provides an enterprise-grade security model separating regular users from privileged administrators, complete with strict environment configuration validation.
 
-### 1. User Roles & Capabilities
+### 1. Mandatory Admin Secret Configuration
+- The backend **never** falls back to a hardcoded admin secret.
+- `ADMIN_REGISTRATION_KEY` is loaded strictly from environment configuration.
+- **Fail-Fast Startup Validation**: During application initialization (`lifespan`), the backend verifies that `ADMIN_REGISTRATION_KEY` is set and non-empty. If missing, startup fails immediately with a descriptive configuration error.
+- Admin registration validates keys in constant time via `secrets.compare_digest` to prevent timing attacks.
+
+### 2. Configurable Secure Cookies (`COOKIE_SECURE`)
+- **HTTPS Production**: `COOKIE_SECURE=true` ensures session cookies are transmitted exclusively over encrypted HTTPS connections with `SameSite=None` (for cross-domain compatibility between Streamlit Cloud and Render) and `HttpOnly=True`.
+- **Local Development**: `COOKIE_SECURE=false` allows HTTP testing without browser cookie rejections.
+- **Strict Validation**: Rejects arbitrary or malformed strings; strictly parses `true`/`1`/`yes` and `false`/`0`/`no`. When unset, defaults intelligently to `True` if `BACKEND_URL` begins with `https://`.
+- **Cookie Deletion**: Matching path, domain, secure, and samesite attributes are passed on logout to guarantee complete revocation.
+
+### 3. User Roles & Capabilities
 | Role | Experience & Capabilities | Restrictions |
 | :--- | :--- | :--- |
-| **`user`** (Standard / Everyday User) | • **Lace Inquiries**: Ask natural questions about lace types, fabric properties, care, and garment design<br>• **Product Catalog**: Explore the classified Industrial Lace Catalog (Raschel, Guipure, Leavers, Stretch)<br>• **Evidence & Citations**: Inspect exact source documents and page numbers for full transparency<br>• **History**: Persistent, multi-device chat inquiry threads with auto-titling | • Cannot upload technical documents<br>• Cannot delete documents from vector store<br>• Blocked from administrative management endpoints (HTTP 403) |
-| **`admin`** (Privileged Administrator) | • All standard user capabilities<br>• **Knowledge Base Portal**: Upload, inspect, and index technical PDF literature<br>• **Surgical Deletion**: Remove specific documents and chunks from ChromaDB<br>• **System Telemetry**: Real-time vector chunk counts, collection shares, and runtime specs | • Requires administrative registration key during signup |
-
-### 2. Admin Provisioning
-To register an Administrator account:
-1. Open the **Auth Portal** and navigate to the **Register** tab.
-2. Enter your Name, Email, and password ($\ge 12$ characters).
-3. Expand the **Administrator Registration (Optional)** toggle.
-4. Provide the private administrative key configured in the environment.
-5. The backend validates the secret key against the environment configuration. If valid, the user is permanently assigned `role="admin"`. If invalid, the request is rejected with `HTTP 400 Bad Request`.
-
-### 3. Security Architecture
-- **Password Security**: Passwords hashed using `bcrypt` (12 salt rounds). Plaintext passwords are never logged or stored.
-- **Session Protection**:
-  - Cryptographically secure 32-byte tokens generated via `secrets.token_urlsafe(32)`.
-  - **No raw tokens in database**: The backend hashes tokens using **SHA-256** before storing in MongoDB.
-  - Set as `HttpOnly`, `SameSite=Lax`, and `Secure` cookies, plus Bearer token compatibility.
-- **Session Expiry & Lifecycle**:
-  - **30-minute sliding idle timeout**: Inactive sessions automatically expire.
-  - **8-hour absolute maximum lifetime**: Re-authentication enforced regardless of activity.
-  - **Immediate revocation on logout**: Deletes the session hash from MongoDB.
-- **Brute-Force Rate Limiting**:
-  - Sliding window rate-limiting tracks failed login attempts by IP and email.
-  - Exceeding 5 consecutive failed attempts temporarily locks out authentication with `HTTP 429 Too Many Requests`.
-- **Database Fallback Policy**: Strict MongoDB Atlas requirement. The system **never** falls back to SQLite, local files, or memory for user accounts or session tokens.
+| **`user`** (Standard / Everyday User) | • **Lace Inquiries**: Ask natural questions about lace types, fabric properties, care, and garment design<br>• **Follow-Up Questions**: Multi-turn dialogue with automatic query rewriting and reference resolution<br>• **Product Catalog**: Explore the classified Industrial Lace Catalog (Raschel, Guipure, Leavers, Stretch)<br>• **Evidence & Citations**: Inspect exact source documents and page numbers for full transparency<br>• **History**: Persistent, multi-device chat inquiry threads with auto-titling | • Cannot upload technical documents<br>• Cannot delete documents from vector store<br>• Blocked from administrative management endpoints (HTTP 403) |
+| **`admin`** (Privileged Administrator) | • All standard user capabilities<br>• **Knowledge Base Portal**: Upload, inspect, and index technical PDF literature<br>• **Surgical Deletion**: Remove specific documents and chunks from ChromaDB<br>• **System Telemetry**: Real-time vector chunk counts, collection shares, and runtime specs | • Requires valid administrative registration key during signup |
 
 ---
 
@@ -118,14 +109,19 @@ To register an Administrator account:
 
 ### 4. Vector Storage & Safe Deletion (`src/vector_store.py`)
 - Persistent storage using **ChromaDB** with HNSW indexing (pre-indexed with 1,340+ verified chunks).
-- **Document-Level Safe Deletion**: Deleting an indexed document queries chunks by `document_id` and surgically purges matching vectors without re-indexing the entire database.
+- Cosine space (`hnsw:space: cosine`), where `distance = 1 - cosine_similarity` and `similarity = max(0.0, 1.0 - distance)`.
 
-### 5. Grounded Synthesis & Citations (`src/generation.py`, `src/citations.py`)
-- Supports **Google Gemini** (`gemini-3.8-flash`) and **OpenRouter** (`meta-llama/llama-3.3-70b-instruct`).
-- Credentials passed securely from user session or environment variables with a 30s timeout guardrail.
-- Low temperature ($0.1$) for strict adherence to technical context.
-- **Transparent Citations**: Answers automatically cite sources with interactive badges and a full raw evidence drawer.
-- **Honest Abstention**: If the evidence is insufficient in the indexed knowledge base, the model explicitly abstains rather than hallucinating standards.
+### 5. Configurable Relevance Thresholding & Abstention (`src/retrieval.py`)
+- Configurable via `RETRIEVAL_SCORE_THRESHOLD` (default: `0.40`).
+- **Benchmarked Metric**: Relevant textile questions consistently score between `0.53` and `0.81`, while out-of-domain queries (e.g., gas turbine efficiency or cryptocurrency) score below `0.35`.
+- **Deterministic Abstention Guardrail**: If no retrieved passages meet the threshold, the system immediately returns an honest abstention response without invoking the LLM:
+  > *"I couldn't find sufficient information in the available documents to answer this question."*
+- Saves 100% of LLM token costs and prevents hallucinations on unsupported topics.
+
+### 6. Conversational History & Follow-Up Query Rewriting (`src/generation.py`, `backend/routes/messages.py`)
+- **Reference Resolution**: When a user asks a context-dependent question (e.g. *"What about its washing requirements?"* after discussing bridal lace), the rewriter automatically reconstructs an independent standalone retrieval query (e.g. *"Bridal lace washing and care requirements"*).
+- **Preserved Intent**: Standalone technical inquiries (e.g. *"What is ASTM D3786 burst strength?"*) remain untouched to avoid unnecessary processing.
+- **Strict Grounding**: Previous assistant conversational turns are used strictly to resolve entities, never as authoritative source documentation.
 
 ---
 
@@ -136,8 +132,8 @@ To register an Administrator account:
   - Administrators access live **Database Telemetry** (collection chunks, document shares, storage paths, and distance metrics).
 - **High-Contrast Callout Banner**:
   - Engineered with dedicated `.callout-banner` styles ensuring pure white (`#ffffff`) serif headings and clear mint accents on deep forest green backgrounds, meeting high readability standards.
-- **Natural, Lace-Centric Copy**:
-  - Intuitive conversational copy ("Ask your query about laces") replacing robotic internal system phrases.
+- **Cold-Start Resilience**:
+  - Streamlit frontend includes fast bounded health checks and informative status cards so users understand Render cold-start wakeups (~45s) rather than seeing an indefinite spinner.
 
 ---
 
@@ -150,10 +146,10 @@ Textile-RAG-Assistant/
 │   │   ├── admin.py                       # Document management & vector stats (RBAC protected)
 │   │   ├── auth.py                        # Register, Login, Logout, Session Me
 │   │   ├── conversations.py               # Conversation CRUD & isolation checks
-│   │   └── messages.py                    # RAG synthesis & persistent chat messages
-│   ├── config.py                          # Dynamic environment & secret loading
+│   │   └── messages.py                    # RAG synthesis, query rewriting & follow-up messages
+│   ├── config.py                          # Environment validation, secrets, cookie security & thresholds
 │   ├── database.py                        # MongoDB Atlas connection & index initialization
-│   ├── main.py                            # FastAPI application entry, CORS middleware, GET/HEAD health
+│   ├── main.py                            # FastAPI app, lifespan validation, CORS, /live & /health
 │   ├── models.py                          # Pydantic schemas and validation models
 │   └── security.py                        # bcrypt, SHA-256 tokens, idle timeouts, rate limiter
 ├── models/                                # Optimized ONNX Inference Weights
@@ -166,9 +162,9 @@ Textile-RAG-Assistant/
 │   ├── chunking.py                        # Sliding-window boundary-aware text chunker
 │   ├── citations.py                       # Citation formatting and abstention detection
 │   ├── embeddings.py                      # ONNX Runtime embedding engine (<60MB RAM)
-│   ├── generation.py                      # LLM context assembly & answer generation
+│   ├── generation.py                      # LLM context assembly, answer generation & query rewriting
 │   ├── ingestion.py                       # PyMuPDF page-aware PDF text extraction
-│   ├── retrieval.py                       # Semantic search & similarity scoring
+│   ├── retrieval.py                       # Semantic search & similarity threshold filtering
 │   └── vector_store.py                    # ChromaDB persistent store & document deletion
 ├── lace_knowledge_base_deliverables/      # Curated Technical Literature
 │   ├── Lace_Textile_Reference_Manual.pdf  # Comprehensive specifications (Yarns, machinery, tests)
@@ -224,11 +220,17 @@ Fill in the configuration in `.env`:
 MONGODB_URI=<your_mongodb_connection_uri>
 MONGODB_DB_NAME=labhtex_textile_rag
 
-# Security
+# Security (Mandatory: startup fails if ADMIN_REGISTRATION_KEY is missing)
 ADMIN_REGISTRATION_KEY=<your_chosen_admin_key>
 SESSION_COOKIE_NAME=labhtex_session
 BACKEND_URL=http://127.0.0.1:8000
 CORS_ORIGINS=http://localhost:8501,http://127.0.0.1:8501,http://localhost:8000
+
+# Cookie Security ('false' for local HTTP development; 'true' for HTTPS production / Render)
+COOKIE_SECURE=false
+
+# Retrieval Threshold (0.0 to 1.0; questions scoring below this abstain cleanly)
+RETRIEVAL_SCORE_THRESHOLD=0.40
 
 # LLM Provider (Choose Gemini or OpenRouter)
 # If using Gemini:
@@ -259,7 +261,8 @@ streamlit run app.py --server.port 8501
 
 - **Frontend UI**: `http://localhost:8501`
 - **Interactive API Docs (Swagger UI)**: `http://127.0.0.1:8000/docs`
-- **Backend Health Check**: `http://127.0.0.1:8000/health`
+- **Liveness Probe**: `http://127.0.0.1:8000/live`
+- **Readiness / Health Check**: `http://127.0.0.1:8000/health`
 
 ---
 
@@ -278,7 +281,9 @@ The platform is designed for a dual-tier cloud deployment:
 3. Add Environment Variables in Render:
    - `MONGODB_URI`: Your MongoDB Atlas connection string.
    - `MONGODB_DB_NAME`: `labhtex_textile_rag`
-   - `ADMIN_REGISTRATION_KEY`: Your private admin registration key.
+   - `ADMIN_REGISTRATION_KEY`: Your private admin registration key (required for startup).
+   - `COOKIE_SECURE`: `true`
+   - `RETRIEVAL_SCORE_THRESHOLD`: `0.40`
    - `OPENROUTER_API_KEY` (or `GEMINI_API_KEY`): Your LLM API key.
    - `CORS_ORIGINS`: Your deployed Streamlit URL (e.g. `https://<your-app>.streamlit.app`).
 4. **Automated Ping Monitoring (Prevent Sleeping)**:
@@ -298,29 +303,32 @@ The platform is designed for a dual-tier cloud deployment:
 
 ## 🧪 Automated Test Suite
 
-The codebase comes with a comprehensive suite of automated tests:
+The codebase comes with a comprehensive suite of 51 passing automated tests:
 
 ```bash
-# 1. Test Authentication, Sessions, RBAC & Chat History
-python test_auth_and_history.py
+# Run the entire test suite
+python -m pytest -v
 
-# 2. Test Boundary-Aware Chunking & Overlap Consistency
-python test_chunking.py
+# 1. Test Authentication, Sessions, RBAC & Chat History (12 tests)
+python -m pytest test_auth_and_history.py -v
 
-# 3. Test High-Efficiency ONNX Embeddings Generation
-python test_embeddings.py
+# 2. Test Improvements, Secret Validation, Cookies, Follow-ups & Retrieval Thresholds (23 tests)
+python -m pytest test_improvements_and_followup.py -v
 
-# 4. Test ChromaDB Indexing, Idempotence & Safe Deletion
-python test_vector_store.py
+# 3. Test Boundary-Aware Chunking & Overlap Consistency
+python -m pytest test_chunking.py -v
 
-# 5. Test Semantic Retrieval & Similarity Scoring
-python test_retrieval.py
+# 4. Test High-Efficiency ONNX Embeddings Generation
+python -m pytest test_embeddings.py -v
 
-# 6. Test Generation, Abstention Logic & Citations
-python test_generation.py
+# 5. Test ChromaDB Indexing, Idempotence & Safe Deletion
+python -m pytest test_vector_store.py -v
 
-# 7. Test PDF Ingestion
-python test_ingestion.py
+# 6. Test Semantic Retrieval & Similarity Scoring
+python -m pytest test_retrieval.py -v
+
+# 7. Test Generation, Abstention Logic & Citations
+python -m pytest test_generation.py -v
 ```
 
 ---
@@ -330,17 +338,18 @@ python test_ingestion.py
 | Method | Endpoint | Access | Description |
 | :--- | :--- | :--- | :--- |
 | `GET`, `HEAD` | `/` | Public | Service information and root availability check |
-| `GET`, `HEAD` | `/health` | Public | System status, MongoDB ping, and ONNX engine check |
-| `POST` | `/api/auth/register` | Public | User registration (admin with `admin_key`) |
-| `POST` | `/api/auth/login` | Public | Authenticate user, issue session cookie & token |
-| `POST` | `/api/auth/logout` | Authenticated | Revoke active session in MongoDB |
+| `GET`, `HEAD` | `/live` | Public | Fast liveness probe returning HTTP 200 `{"status": "alive"}` |
+| `GET`, `HEAD` | `/health` | Public | Component readiness probe (database status, ONNX model readiness) |
+| `POST` | `/api/auth/register` | Public | User registration (admin with validated `admin_key`) |
+| `POST` | `/api/auth/login` | Public | Authenticate user, issue secure cookie & Bearer token |
+| `POST` | `/api/auth/logout` | Authenticated | Revoke active session in MongoDB and clear cookie |
 | `GET` | `/api/auth/me` | Authenticated | Inspect current user identity and role |
 | `POST` | `/api/conversations` | Authenticated | Start a new inquiry thread |
-| `GET` | `/api/conversations` | Authenticated | List all conversations for the user |
+| `GET` | `/api/conversations` | Authenticated | List all conversations for the authenticated user |
 | `PATCH`| `/api/conversations/{id}` | Owner | Rename conversation inquiry title |
 | `DELETE`| `/api/conversations/{id}` | Owner | Cascade delete conversation & all messages |
-| `GET` | `/api/conversations/{id}/messages` | Owner | Retrieve message history with citations |
-| `POST` | `/api/conversations/{id}/messages` | Owner | Query RAG pipeline & append answer |
+| `GET` | `/api/conversations/{id}/messages` | Owner | Retrieve message history chronologically with citations |
+| `POST` | `/api/conversations/{id}/messages` | Owner | Query RAG pipeline with follow-up rewriting & thresholding |
 | `GET` | `/api/admin/documents` | Admin Only | List all indexed PDFs & vector telemetry |
 | `POST` | `/api/admin/documents/upload` | Admin Only | Ingest, chunk, and embed a new PDF |
 | `DELETE`| `/api/admin/documents/{id}` | Admin Only | Surgical deletion of document vectors |

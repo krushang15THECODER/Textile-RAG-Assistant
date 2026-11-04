@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from bson import ObjectId
 
-from backend.config import SESSION_COOKIE_NAME, SESSION_ABSOLUTE_LIFETIME_HOURS
+from backend.config import SESSION_COOKIE_NAME, SESSION_ABSOLUTE_LIFETIME_HOURS, get_cookie_secure
 from backend.database import get_db
 from backend.models import LoginResponse, UserLoginRequest, UserRegisterRequest, UserResponse
 from backend.security import (
@@ -107,13 +107,15 @@ async def login(req: UserLoginRequest, request: Request, response: Response):
     raw_token, expires_at = create_user_session(db, user["_id"])
 
     # Set secure HttpOnly session cookie
+    is_secure = get_cookie_secure()
+    samesite_mode = "none" if is_secure else "lax"
     response.set_cookie(
         key=SESSION_COOKIE_NAME,
         value=raw_token,
         max_age=SESSION_ABSOLUTE_LIFETIME_HOURS * 3600,
         httponly=True,
-        secure=False,  # Set to True behind HTTPS reverse-proxy / Render
-        samesite="lax",
+        secure=is_secure,
+        samesite=samesite_mode,
         path="/"
     )
 
@@ -145,9 +147,14 @@ async def logout(response: Response, auth_data=Depends(get_current_user_and_sess
         {"$set": {"revoked_at": now}}
     )
 
+    is_secure = get_cookie_secure()
+    samesite_mode = "none" if is_secure else "lax"
     response.delete_cookie(
         key=SESSION_COOKIE_NAME,
-        path="/"
+        path="/",
+        secure=is_secure,
+        samesite=samesite_mode,
+        httponly=True
     )
 
     return {"message": "Successfully logged out and session revoked."}

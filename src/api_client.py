@@ -242,6 +242,32 @@ class APIClient:
         except Exception as e:
             return False, str(e)
 
+    def check_health(self, timeout: int = 5) -> Tuple[bool, Any]:
+        """Perform a fast, bounded health check against the backend service."""
+        if self.misconfigured_url_error:
+            return False, {"detail": self.misconfigured_url_error}
+        url = f"{self.base_url}/health"
+        try:
+            resp = self.session.get(url, timeout=timeout)
+            if resp.status_code == 200:
+                try:
+                    return True, resp.json()
+                except Exception:
+                    return True, {"status": "online"}
+            return False, {"detail": self._parse_error(resp)}
+        except requests.exceptions.Timeout:
+            return False, {
+                "detail": "Backend service is currently sleeping (Render Free Tier cold start).",
+                "is_sleeping": True
+            }
+        except requests.exceptions.ConnectionError:
+            return False, {
+                "detail": f"Could not connect to backend at {self.base_url}. Verify service status.",
+                "is_connection_error": True
+            }
+        except Exception as e:
+            return False, {"detail": str(e)}
+
     def admin_delete_document(self, doc_id: str) -> Tuple[bool, str]:
         url = f"{self.base_url}/api/admin/documents/{doc_id}"
         try:

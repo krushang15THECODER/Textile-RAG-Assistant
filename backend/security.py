@@ -12,6 +12,7 @@ from backend.config import (
     SESSION_ABSOLUTE_LIFETIME_HOURS,
     SESSION_COOKIE_NAME,
     SESSION_IDLE_TIMEOUT_MINUTES,
+    get_admin_registration_key,
 )
 from backend.database import get_db
 
@@ -48,9 +49,13 @@ def hash_session_token(token: str) -> str:
 
 def verify_admin_key(provided_key: Optional[str]) -> bool:
     """Verify administrator registration key in constant time."""
-    if not provided_key or not ADMIN_REGISTRATION_KEY:
+    if not provided_key or not provided_key.strip():
         return False
-    return secrets.compare_digest(provided_key.strip(), ADMIN_REGISTRATION_KEY.strip())
+    # Check monkeypatched ADMIN_REGISTRATION_KEY in module, fallback to dynamic get_admin_registration_key()
+    configured_key = ADMIN_REGISTRATION_KEY or get_admin_registration_key()
+    if not configured_key or not configured_key.strip():
+        return False
+    return secrets.compare_digest(provided_key.strip(), configured_key.strip())
 
 
 def check_login_rate_limit(client_ip: str) -> None:

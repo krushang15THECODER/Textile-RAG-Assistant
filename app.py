@@ -31,7 +31,7 @@ REGISTRY_PATH = Path("data") / "documents_registry.json"
 
 st.set_page_config(
     page_title="Textile Intelligence — Grounded RAG Platform",
-    page_icon="🧵",
+    page_icon="T",
     layout="wide",
     initial_sidebar_state="expanded",
 )
@@ -73,12 +73,25 @@ header[data-testid="stHeader"] {
 
 /* Hide only the clutter: Cloud share/star/edit/menu toolbar actions and decoration */
 [data-testid="stToolbarActions"],
-[data-testid="stStatusWidget"],
 #MainMenu,
 .stAppDeployButton,
 [data-testid="stDecoration"] {
     display: none !important;
     visibility: hidden !important;
+}
+
+/* Polished native Streamlit status spinner widget */
+[data-testid="stStatusWidget"] {
+    display: inline-flex !important;
+    visibility: visible !important;
+    opacity: 0.95 !important;
+    background: #ffffff !important;
+    border: 1px solid #b8ccb6 !important;
+    border-radius: 20px !important;
+    padding: 3px 12px !important;
+    box-shadow: 0 2px 8px rgba(27, 53, 39, 0.08) !important;
+    font-size: 0.8rem !important;
+    color: #1b3527 !important;
 }
 
 /* Force expand sidebar arrow button to be visible, styled, and clickable in all Streamlit versions */
@@ -195,67 +208,63 @@ button[data-testid="stSidebarCollapseButton"] svg {
     line-height: 1.4;
 }
 
-[data-testid="stSidebar"] [role="radiogroup"] {
-    gap: 8px !important;
-    display: flex !important;
-    flex-direction: column !important;
-    margin-top: 0.4rem !important;
+/* Partitioned Box for Module Navigation Buttons */
+[data-testid="stSidebar"] div[data-testid="stVerticalBlockBorderWrapper"] {
+    background: rgba(0, 0, 0, 0.22) !important;
+    border: 1.5px solid rgba(255, 255, 255, 0.14) !important;
+    border-radius: 12px !important;
+    padding: 10px 10px 8px !important;
+    margin-top: 0.8rem !important;
     margin-bottom: 0.8rem !important;
+    box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.25) !important;
 }
 
-[data-testid="stSidebar"] [data-baseweb="radio"] > div:first-child {
-    display: none !important;
-}
-
-[data-testid="stSidebar"] [data-baseweb="radio"],
-[data-testid="stSidebar"] [role="radiogroup"] > label {
-    position: relative !important;
-    display: flex !important;
-    align-items: center !important;
-    background: rgba(255, 255, 255, 0.06) !important;
-    border: 1px solid rgba(255, 255, 255, 0.12) !important;
-    border-radius: 10px !important;
-    padding: 12px 18px !important;
-    margin: 3px 0 !important;
-    cursor: pointer !important;
-    transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1) !important;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06) !important;
-    backdrop-filter: blur(4px) !important;
-}
-
-[data-testid="stSidebar"] [data-baseweb="radio"]:hover,
-[data-testid="stSidebar"] [role="radiogroup"] > label:hover {
-    background: rgba(255, 255, 255, 0.14) !important;
-    border-color: rgba(255, 255, 255, 0.28) !important;
-    transform: translateX(4px) !important;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12) !important;
-}
-
-[data-testid="stSidebar"] [data-baseweb="radio"]:has(input:checked),
-[data-testid="stSidebar"] [role="radiogroup"] > label:has(input:checked) {
-    background: #ffffff !important;
-    border: 1px solid #ded9cd !important;
-    border-left: 5px solid #b3593b !important;
-    transform: translateX(6px) !important;
-    box-shadow: 0 6px 18px rgba(10, 25, 17, 0.25) !important;
-}
-
-[data-testid="stSidebar"] [role="radiogroup"] p {
+/* ACTIVE Navigation Button (Highlighted with emerald gradient & glow) */
+[data-testid="stSidebar"] button[kind="primary"] {
+    background: linear-gradient(135deg, #1f4733 0%, #132e20 100%) !important;
+    color: #ffffff !important;
+    border: 1.5px solid #66c68e !important;
+    border-left: 4px solid #66c68e !important;
+    border-radius: 9px !important;
     font-family: 'DM Mono', monospace !important;
-    font-size: 0.84rem !important;
-    font-weight: 500 !important;
-    letter-spacing: 0.12em !important;
-    text-transform: uppercase !important;
-    color: #e0ece3 !important;
-    margin: 0 !important;
-    line-height: 1.4 !important;
+    font-size: 0.82rem !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.1em !important;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+    padding: 10px 14px !important;
+    margin: 3px 0 !important;
 }
 
-[data-testid="stSidebar"] [role="radiogroup"] > label:has(input:checked) p,
-[data-testid="stSidebar"] [role="radiogroup"] > label:has(input:checked) span {
-    color: #173323 !important;
+[data-testid="stSidebar"] button[kind="primary"] p,
+[data-testid="stSidebar"] button[kind="primary"] span {
+    color: #ffffff !important;
     font-weight: 700 !important;
-    letter-spacing: 0.14em !important;
+}
+
+/* INACTIVE Navigation Buttons inside Partitioned Box */
+[data-testid="stSidebar"] div[data-testid="stVerticalBlockBorderWrapper"] button[kind="secondary"] {
+    background: rgba(255, 255, 255, 0.06) !important;
+    color: #c9ded0 !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    border-radius: 9px !important;
+    font-family: 'DM Mono', monospace !important;
+    font-size: 0.82rem !important;
+    font-weight: 500 !important;
+    letter-spacing: 0.1em !important;
+    transition: all 0.2s ease !important;
+    margin: 3px 0 !important;
+}
+
+[data-testid="stSidebar"] div[data-testid="stVerticalBlockBorderWrapper"] button[kind="secondary"]:hover {
+    background: rgba(255, 255, 255, 0.14) !important;
+    border-color: rgba(255, 255, 255, 0.24) !important;
+    color: #ffffff !important;
+    transform: translateY(-1px) !important;
+}
+
+[data-testid="stSidebar"] div[data-testid="stVerticalBlockBorderWrapper"] button[kind="secondary"] p,
+[data-testid="stSidebar"] div[data-testid="stVerticalBlockBorderWrapper"] button[kind="secondary"] span {
+    color: #c9ded0 !important;
 }
 
 .status-badge-container {
@@ -335,8 +344,65 @@ button[data-testid="stSidebarCollapseButton"] svg {
     font-weight: 600 !important;
 }
 
+/* Hide the cluttered "Press Enter to submit form" instruction */
+[data-testid="InputInstructions"],
+div[data-testid="InputInstructions"] {
+    display: none !important;
+    visibility: hidden !important;
+}
+
+/* Global Modern Form & Text Input Styling */
+div[data-baseweb="input"] {
+    background-color: #ffffff !important;
+    border: 1.5px solid #dedad0 !important;
+    border-radius: 10px !important;
+    box-shadow: 0 1px 3px rgba(27, 53, 39, 0.03) !important;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    padding: 1px 2px !important;
+}
+
+div[data-baseweb="input"]:hover {
+    border-color: #b8ccb6 !important;
+    box-shadow: 0 2px 6px rgba(27, 53, 39, 0.06) !important;
+}
+
+div[data-baseweb="input"]:focus-within {
+    border-color: #2a4c3a !important;
+    background-color: #ffffff !important;
+    box-shadow: 0 0 0 3px rgba(42, 76, 58, 0.12), 0 2px 8px rgba(27, 53, 39, 0.06) !important;
+}
+
+div[data-baseweb="input"] input {
+    background-color: transparent !important;
+    color: #1a221c !important;
+    font-family: 'DM Sans', sans-serif !important;
+    font-size: 0.95rem !important;
+    font-weight: 400 !important;
+    padding: 10px 14px !important;
+}
+
+div[data-baseweb="input"] input::placeholder {
+    color: #929d95 !important;
+    font-size: 0.92rem !important;
+    font-weight: 400 !important;
+}
+
+/* Modern Input Labels */
+div[data-testid="stTextInput"] label p,
+div[data-testid="stTextInput"] label span,
+div[data-testid="stPasswordInput"] label p,
+label[data-testid="stWidgetLabel"] p {
+    font-family: 'DM Sans', sans-serif !important;
+    font-size: 0.86rem !important;
+    font-weight: 600 !important;
+    color: #2e4d3c !important;
+    letter-spacing: 0.01em !important;
+    margin-bottom: 3px !important;
+}
+
 .hero-box {
     position: relative;
+    isolation: isolate !important;
     overflow: hidden;
     padding: 2.4rem 2.6rem;
     background: #ffffff;
@@ -348,17 +414,66 @@ button[data-testid="stSidebarCollapseButton"] svg {
 .hero-box::after {
     content: 'TI';
     position: absolute;
-    right: 2rem;
-    top: -3.5rem;
-    font-family: 'Playfair Display', serif;
-    font-size: 15rem;
+    right: 2.8rem;
+    top: 50%;
+    transform: translateY(-50%);
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 11.5rem;
+    font-weight: 700;
+    letter-spacing: -0.05em;
     line-height: 1;
-    color: #f1ede2;
+    color: #ede9de;
     pointer-events: none;
-    z-index: 0;
-    opacity: 0.6;
+    user-select: none;
+    z-index: -1 !important;
+    opacity: 0.9;
+    transition: opacity 0.3s ease;
 }
-.hero-content { position: relative; z-index: 1; }
+.hero-box:hover::after {
+    opacity: 1;
+}
+.hero-content, .hero-box > * { 
+    position: relative; 
+    z-index: 1; 
+}
+
+/* System status indicators for serene loading states */
+.system-status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.74rem;
+    letter-spacing: 0.04em;
+    padding: 4px 12px;
+    border-radius: 14px;
+    margin-bottom: 0.75rem;
+}
+.system-status-pill.online {
+    background: #edf4ec;
+    border: 1px solid #b8ccb6;
+    color: #234230;
+}
+.system-status-pill.ready {
+    background: #fbfaf6;
+    border: 1px solid #dedad0;
+    color: #556358;
+}
+.pulse-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #2a7e4b;
+    display: inline-block;
+}
+.pulse-dot.pulse {
+    animation: statusPulse 1.8s infinite;
+}
+@keyframes statusPulse {
+    0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(42, 126, 75, 0.45); }
+    70% { transform: scale(1.05); box-shadow: 0 0 0 5px rgba(42, 126, 75, 0); }
+    100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(42, 126, 75, 0); }
+}
 .hero-eyebrow {
     display: inline-block;
     color: var(--rust) !important;
@@ -1000,8 +1115,15 @@ def ensure_default_documents_indexed():
                     print(f"Error bootstrapping {pdf_path.name}: {e}")
 
 
-ensure_default_documents_indexed()
-sync_registry_with_vector_store()
+# Run initial bootstrap and sync only once per session to prevent blocking reruns
+if "documents_synced" not in st.session_state:
+    try:
+        ensure_default_documents_indexed()
+        sync_registry_with_vector_store()
+        st.session_state.documents_synced = True
+    except Exception as init_err:
+        print(f"Warning during initial documents sync: {init_err}")
+        st.session_state.documents_synced = True
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
@@ -1047,32 +1169,56 @@ def display_clean_error(title: str, error_msg: Any):
         "configured timeouts", "AutoReconnect", "ServerDescription", "socketTimeoutMS"
     ))
     if is_timeout:
-        st.warning("⏳ **The cloud backend was waking up from sleep.** On Render's Free Tier, services spin down after inactivity. The backend is now awake — please click Send again to submit your question!")
-        with st.expander("🛠️ View Connection Diagnostic Details", expanded=False):
+        st.warning("**The cloud backend was waking up from sleep.** On Render's Free Tier, services spin down after inactivity. The backend is now awake — please click Send again to submit your question!")
+        with st.expander("View Connection Diagnostic Details", expanded=False):
             st.code(raw, language="text")
             st.caption("Render Free Tier cold starts typically take 45–60 seconds on the first inquiry.")
     elif is_technical:
-        st.error(f"⚠️ **{title}**: Database service is temporarily unreachable.")
-        with st.expander("🛠️ View Diagnostic Details", expanded=False):
+        st.error(f"**{title}**: Database service is temporarily unreachable.")
+        with st.expander("View Diagnostic Details", expanded=False):
             st.code(raw, language="text")
             st.caption("Hint: Check MongoDB Atlas Network Access to ensure `0.0.0.0/0` is Active.")
     else:
-        st.error(f"⚠️ **{title}**: {raw}")
+        st.error(f"**{title}**: {raw}")
 
 def render_auth_portal(client: APIClient):
     st.markdown("""
     <div class="hero-box" style="text-align: center; margin: 2rem auto; max-width: 580px;">
-        <span class="hero-eyebrow">ENTERPRISE SECURITY & KNOWLEDGE ARCHIVE</span>
-        <h1 style="font-size: 2.2rem; margin-top: 0.3rem;">LabhTex Intelligence<span>.</span></h1>
-        <p class="hero-p" style="margin: 0 auto; max-width: 460px;">
-            Authenticated access for textile engineers, fabric consultants, and authorized quality auditors.
-        </p>
+        <div class="hero-content">
+            <span class="hero-eyebrow">ENTERPRISE SECURITY & KNOWLEDGE ARCHIVE</span>
+            <h1 style="font-size: 2.2rem; margin-top: 0.3rem;">LabhTex Intelligence<span>.</span></h1>
+            <p class="hero-p" style="margin: 0 auto; max-width: 460px;">
+                Authenticated access for textile engineers, fabric consultants, and authorized quality auditors.
+            </p>
+        </div>
     </div>
     """, unsafe_allow_html=True)
 
     c1, c2, c3 = st.columns([1, 2, 1])
     with c2:
-        tab_login, tab_register = st.tabs(["🔐 Sign In", "📝 Register Account"])
+        # Check backend readiness with a bounded fast probe
+        if "backend_verified" not in st.session_state:
+            ok_h, h_info = client.check_health(timeout=3)
+            st.session_state.backend_verified = ok_h
+            st.session_state.backend_info = h_info
+
+        is_verified = st.session_state.get("backend_verified", False)
+        status_html = """
+        <div style="text-align: center; margin-bottom: 0.8rem;">
+            <div class="system-status-pill online">
+                <span class="pulse-dot pulse"></span> Cloud Knowledge Engine Connected
+            </div>
+        </div>
+        """ if is_verified else """
+        <div style="text-align: center; margin-bottom: 0.8rem;">
+            <div class="system-status-pill ready">
+                <span class="pulse-dot pulse" style="background:#b3593b;"></span> Initializing Secure Workspace
+            </div>
+        </div>
+        """
+        st.markdown(status_html, unsafe_allow_html=True)
+
+        tab_login, tab_register = st.tabs(["Sign In", "Register Account"])
 
         with tab_login:
             with st.form("portal_login_form"):
@@ -1085,7 +1231,8 @@ def render_auth_portal(client: APIClient):
                     if not login_email or not login_password:
                         st.error("Please enter both email and password.")
                     else:
-                        ok, res = client.login(login_email, login_password)
+                        with st.spinner("Authenticating secure session..."):
+                            ok, res = client.login(login_email, login_password)
                         if ok:
                             st.session_state.auth_token = res["token"]
                             st.session_state.user = res["user"]
@@ -1103,7 +1250,7 @@ def render_auth_portal(client: APIClient):
                 reg_email = st.text_input("Work Email", placeholder="arjun@labhtex.com")
                 reg_password = st.text_input("Password (min 12 characters)", type="password", placeholder="Create secure password")
 
-                with st.expander("🛡️ Administrator Provisioning (Optional)"):
+                with st.expander("Administrator Provisioning (Optional)"):
                     st.caption("Provide the administrator secret key if registering with administrative privileges.")
                     reg_admin_key = st.text_input("Admin Registration Key", type="password", placeholder="Admin registration secret")
 
@@ -1114,10 +1261,11 @@ def render_auth_portal(client: APIClient):
                     elif len(reg_password) < 12:
                         st.error("Password must be at least 12 characters long.")
                     else:
-                        ok, res = client.register(reg_name, reg_email, reg_password, admin_key=reg_admin_key if reg_admin_key else None)
+                        with st.spinner("Provisioning new account..."):
+                            ok, res = client.register(reg_name, reg_email, reg_password, admin_key=reg_admin_key if reg_admin_key else None)
                         if ok:
                             role_title = "Administrator" if res.get("role") == "admin" else "Textile Specialist"
-                            st.success(f"✓ Account successfully created as **{role_title}**! Please switch to 'Sign In' to log in.")
+                            st.success(f"Account successfully created as **{role_title}**! Please switch to 'Sign In' to log in.")
                         else:
                             display_clean_error("Registration Failed", res)
 
@@ -1160,7 +1308,7 @@ with st.sidebar:
         <div style="background: rgba(42, 76, 58, 0.45); border: 1px solid #5ee08b; border-radius: 8px; padding: 10px 12px; margin-bottom: 10px;">
             <div style="font-family: 'DM Mono', monospace; font-size: 0.65rem; color: #9fe2b5; letter-spacing: 0.12em; text-transform: uppercase;">Active Identity</div>
             <div style="font-size: 0.88rem; font-weight: 600; color: #ffffff; display: flex; align-items: center; gap: 6px; margin-top: 2px;">
-                <span class="pulse-dot"></span> 🛡️ {user_name}
+                <span class="pulse-dot"></span> {user_name}
             </div>
             <div style="font-size: 0.72rem; color: #d0edd8; margin-top: 2px;">{user_email} (Admin)</div>
         </div>
@@ -1169,12 +1317,12 @@ with st.sidebar:
         st.markdown(f"""
         <div style="background: rgba(0,0,0,0.18); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 10px 12px; margin-bottom: 10px;">
             <div style="font-family: 'DM Mono', monospace; font-size: 0.65rem; color: #b8ccb6; letter-spacing: 0.12em; text-transform: uppercase;">Active Identity</div>
-            <div style="font-size: 0.88rem; font-weight: 600; color: #f7f6f0; margin-top: 2px;">👤 {user_name}</div>
+            <div style="font-size: 0.88rem; font-weight: 600; color: #f7f6f0; margin-top: 2px;">{user_name}</div>
             <div style="font-size: 0.72rem; color: #a4bea9; margin-top: 2px;">{user_email}</div>
         </div>
         """, unsafe_allow_html=True)
 
-    if st.button("🚪 Log Out", use_container_width=True):
+    if st.button("Log Out", use_container_width=True):
         api_client.logout()
         st.session_state.auth_token = None
         st.session_state.user = None
@@ -1191,7 +1339,7 @@ with st.sidebar:
     # Conversation Archive (Persistent in MongoDB Atlas)
     st.markdown("<div style='font-family:DM Mono,monospace;font-size:0.68rem;letter-spacing:0.12em;color:#b8ccb6;margin-bottom:6px;text-transform:uppercase;'>CONVERSATIONS</div>", unsafe_allow_html=True)
 
-    if st.button("➕ New Query", use_container_width=True):
+    if st.button("+ New Query", use_container_width=True):
         st.session_state.current_conv_id = None
         st.session_state.messages = []
         st.rerun()
@@ -1199,12 +1347,18 @@ with st.sidebar:
     ok_convs, conv_list = api_client.list_conversations()
     if ok_convs and conv_list:
         curr_id = st.session_state.get("current_conv_id")
-        for c in conv_list[:12]:
+        total_convs = len(conv_list)
+        show_all = st.session_state.get("show_all_chats", False)
+        
+        # Display top 5 recent chats by default, or all if expanded
+        displayed_convs = conv_list if show_all else conv_list[:5]
+
+        for c in displayed_convs:
             c_id = c["id"]
             c_title = c.get("title", "Inquiry")
             is_active = (c_id == curr_id)
             c_msgs = c.get("message_count", 0)
-            prefix = "🟢 " if is_active else "💬 "
+            prefix = "• " if is_active else ""
             label = f"{prefix}{c_title[:22]} ({c_msgs})"
 
             if st.button(label, key=f"conv_select_{c_id}", use_container_width=True):
@@ -1214,15 +1368,22 @@ with st.sidebar:
                     st.session_state.messages = msgs
                 st.rerun()
 
+        # If there are more than 5 conversations, provide View All / Show Less button
+        if total_convs > 5:
+            toggle_label = "Show Recent (5)" if show_all else f"View All ({total_convs} Chats)"
+            if st.button(toggle_label, key="btn_toggle_view_all_chats", use_container_width=True):
+                st.session_state.show_all_chats = not show_all
+                st.rerun()
+
         # If an active conversation is selected, provide Rename & Delete
         if curr_id:
-            with st.expander("⚙️ Manage Active Chat"):
+            with st.expander("Manage Active Chat"):
                 rename_title = st.text_input("New Title", key="input_rename_title")
                 if st.button("Rename", key="btn_apply_rename", use_container_width=True):
                     if rename_title.strip():
                         api_client.rename_conversation(curr_id, rename_title.strip())
                         st.rerun()
-                if st.button("🗑️ Delete Chat", key="btn_del_chat", use_container_width=True):
+                if st.button("Delete Chat", key="btn_del_chat", use_container_width=True):
                     api_client.delete_conversation(curr_id)
                     st.session_state.current_conv_id = None
                     st.session_state.messages = []
@@ -1232,26 +1393,44 @@ with st.sidebar:
 
     st.markdown("<div style='height: 8px;'></div>", unsafe_allow_html=True)
 
-    if st.session_state.is_admin:
-        available_pages = ["AI Assistant", "Knowledge Base", "Overview"]
-        nav_labels = {
-            "AI Assistant": "01 / AI ASSISTANT",
-            "Knowledge Base": "02 / KNOWLEDGE BASE",
-            "Overview": "03 / OVERVIEW",
-        }
-    else:
-        available_pages = ["AI Assistant", "Overview"]
-        nav_labels = {
-            "AI Assistant": "01 / AI ASSISTANT",
-            "Overview": "02 / OVERVIEW",
-        }
+    if "active_page" not in st.session_state:
+        st.session_state.active_page = "AI Assistant"
 
-    page = st.radio(
-        "WORKSPACE NAVIGATION",
-        options=available_pages,
-        format_func=lambda x: nav_labels.get(x, x),
-        label_visibility="collapsed",
-    )
+    if st.session_state.is_admin:
+        nav_items = [
+            ("AI Assistant", "01 / AI ASSISTANT"),
+            ("Knowledge Base", "02 / KNOWLEDGE BASE"),
+            ("Overview", "03 / OVERVIEW"),
+        ]
+    else:
+        nav_items = [
+            ("AI Assistant", "01 / AI ASSISTANT"),
+            ("Overview", "02 / OVERVIEW"),
+        ]
+
+    # Validate active_page
+    valid_keys = [k for k, _ in nav_items]
+    if st.session_state.active_page not in valid_keys:
+        st.session_state.active_page = "AI Assistant"
+
+    with st.container(border=True):
+        st.markdown(
+            "<div style='font-family:DM Mono,monospace;font-size:0.66rem;font-weight:600;letter-spacing:0.14em;color:#9cbda4;text-transform:uppercase;margin-bottom:8px;'>WORKSPACE MODULES</div>",
+            unsafe_allow_html=True
+        )
+        for page_key, page_label in nav_items:
+            is_active = (st.session_state.active_page == page_key)
+            if st.button(
+                page_label,
+                key=f"nav_mod_btn_{page_key}",
+                type="primary" if is_active else "secondary",
+                use_container_width=True
+            ):
+                if st.session_state.active_page != page_key:
+                    st.session_state.active_page = page_key
+                    st.rerun()
+
+    page = st.session_state.active_page
 
     if st.session_state.is_admin:
         st.markdown(f"""
@@ -1284,7 +1463,7 @@ with st.sidebar:
 # Backend Security Enforcement
 if page in ["Knowledge Base"]:
     if not st.session_state.get("is_admin", False):
-        st.error("⛔ Unauthorized Access: Administrative authentication required.")
+        st.error("Unauthorized Access: Administrative authentication required.")
         st.stop()
 
 if page == "Overview":
@@ -1317,7 +1496,7 @@ if page == "Overview":
         with m3:
             st.metric("Collection Name", collection_name)
         with m4:
-            st.metric("Database Status", "🟢 Connected" if db_connected else "🔴 Offline")
+            st.metric("Database Status", "Connected" if db_connected else "Offline")
 
         st.divider()
 
@@ -1380,7 +1559,7 @@ if page == "Overview":
         with c3:
             st.metric("Garment Sectors", "Bridal & RTW", "Intimates & Couture")
         with c4:
-            st.metric("AI Consultant", "🟢 Online 24/7", "Verified Citations")
+            st.metric("AI Consultant", "Online", "Verified Citations")
 
         st.divider()
 
@@ -1469,7 +1648,7 @@ elif page == "Knowledge Base":
     st.title("Document Library & Vector Management")
     st.caption("Upload reference technical PDFs, inspect indexed documents, view chunk status, and safely delete individual documents.")
 
-    with st.expander("📤 Upload & Index Technical PDF Documents", expanded=True):
+    with st.expander("Upload & Index Technical PDF Documents", expanded=True):
         uploaded_files = st.file_uploader(
             "Select Technical PDF Documents",
             type=["pdf"],
@@ -1479,11 +1658,11 @@ elif page == "Knowledge Base":
         )
 
         if uploaded_files:
-            st.caption(f"📄 **{len(uploaded_files)} PDF file(s)** staged for processing.")
+            st.caption(f"**{len(uploaded_files)} PDF file(s)** staged for processing.")
 
-            if st.button("⚡ Process & Index Selected PDFs into ChromaDB", type="primary"):
+            if st.button("Process & Index Selected PDFs into ChromaDB", type="primary"):
                 if not st.session_state.get("is_admin", False):
-                    st.error("⛔ Unauthorized action: Administrative privileges required.")
+                    st.error("Unauthorized action: Administrative privileges required.")
                     st.stop()
 
                 registry = sync_registry_with_vector_store()
@@ -1542,7 +1721,7 @@ elif page == "Knowledge Base":
                 progress_bar.empty()
 
                 if processed_count:
-                    st.success(f"✓ Successfully processed and indexed {processed_count} PDF(s) into ChromaDB.")
+                    st.success(f"Successfully processed and indexed {processed_count} PDF(s) into ChromaDB.")
                     st.rerun()
                 if skipped_count:
                     st.info(f"Skipped {skipped_count} PDF(s) already in the database.")
@@ -1562,7 +1741,7 @@ elif page == "Knowledge Base":
                 with st.container(border=True):
                     st.markdown(f"""
                     <div style="color: #b3593b; font-weight: 600; font-size: 1.1rem; margin-bottom: 8px;">
-                        ⚠️ Confirm Document Deletion
+                        Confirm Document Deletion
                     </div>
                     <p style="margin-bottom: 12px; color: #333;">
                         Are you sure you want to permanently delete <strong>{target_doc.get('filename')}</strong> (ID: <code>{del_id}</code>)?<br>
@@ -1573,9 +1752,9 @@ elif page == "Knowledge Base":
 
                     btn_col1, btn_col2, _ = st.columns([1.5, 1, 3])
                     with btn_col1:
-                        if st.button("🚨 Confirm Permanent Deletion", key=f"confirm_del_btn_{del_id}", type="primary"):
+                        if st.button("Confirm Permanent Deletion", key=f"confirm_del_btn_{del_id}", type="primary"):
                             if not st.session_state.get("is_admin", False):
-                                st.error("⛔ Unauthorized action: Administrative privileges required.")
+                                st.error("Unauthorized action: Administrative privileges required.")
                                 st.stop()
 
                             try:
@@ -1595,7 +1774,7 @@ elif page == "Knowledge Base":
                                 save_documents_registry(registry)
 
                                 st.session_state.confirm_delete_id = None
-                                st.success(f"✓ Successfully deleted '{filename}' and purged its {chunk_cnt} chunks from ChromaDB.")
+                                st.success(f"Successfully deleted '{filename}' and purged its {chunk_cnt} chunks from ChromaDB.")
                                 st.rerun()
 
                             except Exception as del_err:
@@ -1613,7 +1792,7 @@ elif page == "Knowledge Base":
                 c_main, c_date, c_chunks, c_status, c_action = st.columns([3, 1.6, 1.4, 1.4, 1.2])
 
                 with c_main:
-                    st.markdown(f"**📄 {doc.get('filename', 'Unknown')}**")
+                    st.markdown(f"**{doc.get('filename', 'Unknown')}**")
                     size_kb = doc.get("file_size", 0) / 1024
                     st.caption(f"ID: `{doc_id}` · {size_kb:.1f} KB")
 
@@ -1627,7 +1806,7 @@ elif page == "Knowledge Base":
 
                 with c_status:
                     st.markdown("**Status**")
-                    st.caption("🟢 " + doc.get("status", "Indexed"))
+                    st.caption(doc.get("status", "Indexed"))
 
                 with c_action:
                     st.markdown("<div style='height: 4px;'></div>", unsafe_allow_html=True)
@@ -1652,9 +1831,9 @@ elif page == "AI Assistant":
 
     if vector_store.count() == 0:
         if st.session_state.is_admin:
-            st.warning("⚠️ No documents indexed yet. Go to **Knowledge Base** tab to upload and index technical PDFs.")
+            st.warning("No documents indexed yet. Go to Knowledge Base tab to upload and index technical PDFs.")
         else:
-            st.warning("⚠️ Knowledge base is currently updating. Please check back shortly.")
+            st.warning("Knowledge base is currently updating. Please check back shortly.")
 
     if not st.session_state.messages and vector_store.count() > 0:
         st.markdown("<div style='font-family:DM Mono,monospace;font-size:0.72rem;letter-spacing:0.12em;color:var(--rust);margin:1.5rem 0 0.6rem;text-transform:uppercase;'>COMMONLY ASKED QUESTIONS ABOUT LACES</div>", unsafe_allow_html=True)
@@ -1677,12 +1856,12 @@ elif page == "AI Assistant":
             st.markdown(message["content"])
 
             if message.get("citations_md"):
-                with st.expander("📑 Sources & Citations"):
+                with st.expander("Sources & Citations"):
                     st.markdown(message["citations_md"])
 
             chunks = message.get("retrieved_chunks", [])
             if chunks:
-                with st.expander("🔍 View Retrieved Evidence Chunks"):
+                with st.expander("Retrieved Evidence Chunks"):
                     for c in chunks:
                         sim_pct = int(c.get("similarity", 0.0) * 100)
                         st.markdown(f"**[{c.get('source', 'Unknown')}] Page {c.get('page_number', 1)}** (Relevance: `{sim_pct}%`)")
